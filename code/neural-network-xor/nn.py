@@ -26,12 +26,13 @@ class Network:
     
     def feedforward(self, activations):
         for bias, weights in zip(self.biases, self.weights):
-            print(f"Bias: {bias}")
-            print(f"Weights: {weights}")
-            print(f"Activations: {activations}")
-            # activations = self.sigmoid(np.dot(weights, activations) + bias)
-            activations = np.dot(weights, activations) 
-            print(f"Output Activations: {activations}")
+            # First pass
+            # bias is a list of 5 lists with 1 element each
+            # weights is a list of 5 lists with 2 elements each (the weight from each of the 2 input neurons for each of the 5 hidden neurons)
+            # the index of bias and index of weight correspond to the same hidden neuron
+            dot = np.dot(weights, activations)
+            z = dot + bias
+            activations = self.sigmoid(z)
         return activations
 
 
@@ -44,4 +45,4 @@ xor_data = [
 
 if __name__ == "__main__":
     net = Network([2, 5, 1])
-    print(f"Final Activation: {net.feedforward(np.array([0, 0]))}")
+    print(f"Final Activation: {net.feedforward(np.array([[0], [0]]))}")
