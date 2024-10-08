@@ -21,8 +21,12 @@ class Network:
         self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
         # weights are [ [weight for n inpout nuerons, ..], ..list of weights for n hidden neurons  ]
 
-    def sigmoid(self, z):
+    def _sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
+
+    def _mse_loss_function(self, y_true, y_pred):
+        # Mean Squared Error loss function
+        return np.mean((y_true - y_pred) ** 2)
     
     def feedforward(self, activations):
         for bias, weights in zip(self.biases, self.weights):
@@ -32,10 +36,10 @@ class Network:
             # the index of bias and index of weight correspond to the same hidden neuron
             dot = np.dot(weights, activations)
             z = dot + bias
-            activations = self.sigmoid(z)
+            activations = self._sigmoid(z)
         return activations
 
-
+# [(input x1 x2), (output y1)]
 xor_data = [
     [(0, 0), (0,)],
     [(0, 1), (1,)],

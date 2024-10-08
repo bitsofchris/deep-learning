@@ -51,4 +51,3 @@ Matrix is a transformation
 
 Left off chapter 4
 
-
