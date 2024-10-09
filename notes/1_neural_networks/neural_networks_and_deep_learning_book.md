@@ -11,7 +11,7 @@ Definitely do the exercises as a sanity check I understand
 
 Skip the problems- use them as inspiration for my own neural network project (something on financial or time series data).
 
-# chapter 1 - basic NN
+# Chapter 1 - basic NN
 
 ### My Notes
 Gradient descent is our learning algorithm, our cost function or objective function. It seeks to find the direction to make a small change of the weights and biases to minimize the cost.
@@ -75,4 +75,77 @@ Deep networks use different newer learning techniques.
 - high dimensional thinking - often not visual, but using other tools like algebraic representations
 
 ##### implementing our network
-- left off notes
+- training set - used to train the network
+- validation set - used repeatedly to tune hyper parameters
+- test set - used once to evaluate
+- randomly initialized weights and biases in the network
+- activations = sigmoid(weights * previous activations + biases)
+- learning rate - size of steps when learning
+	- .001 -> .01 -> .1 -> 1, etc
+- epoch - one complete pass through training data
+- Each Epoch
+	- 1. randomly shuffle the training data
+	- 2. slice into mini-batches
+	- 3. for each mini batch -> gradient descent and update weights/biases
+- Backprop algorithm - computes the gradient of the cost for a given training example
+- no bias is used in input layer
+- feedforward() - takes inputs and computes output of the network
+- hyperparameters - configure the neural network and training
+	- different from the parameters (weights & biases) of the network itself
+	- tuning - if making a change improves things, try doing more of that
+- debugging and tuning neural networks are a bit of an art
+- a simple algorithm + good training data is often better than a sophisticated algorithm
+- deep neural networks - have many layers compare to a single hidden layer for shallow neural networks
+	- recursive decomposition into subnetworks - many layers break problems down into smaller and smaller problems or more abstract concepts
+
+# Chapter 2 - Backpropagation
+
+Backprop algorithm - how we find the changes to bias and weights impact the cost function 
+- partial derivative of the cost function with respect to any weight or bias
+- this tells us how quickly the cost changes when we change weights or bias
+- first need to compute the error in a given layer
+
+Partial derivative of weights and bias - computing the gradient of the cost function
+
+Error is the small change 
+
+
+### 4 equations of backprop
+- together they give a way to compute the error at a given layer and the gradient of the cost function
+
+![4 equations of backprop](images/4_equations_of_backprop.png)
+
+Image taken from the book directly [here](http://neuralnetworksanddeeplearning.com/chap2.html)
+
+
+##### error in the output layer (BP1)
+
+
+partial derivative of the cost with resepct to activation at jth output neuron
+
+##### error in terms of error in next layer (BP2)
+
+
+error of layer l
+
+Transpose weight matrix to move the error backward through the network
+
+sigmoid of z -> becomes flat when really small or really large, it learns "slowly" as it's alrady close to 0 or 1 activation. said to be "saturated" and stops learning
+
+As the error gets small, the neuron is near saturation, it will learn more slowly
+
+
+Using the above two equations - can compute the error for ANY LAYER in the network.
+
+first get error in the output layer, then use second equation to get error in output layer -1, etc.
+
+
+##### rate of change of the cost with respect to any bias (BP3)
+
+the error is equal to the rate of change here (since bias is a constant?)
+
+##### rate of change of the cost with respect to any weight in the network (BP4)
+
+in other words the rate of change in cost for a given weights = the activations in previous layer (the input to the weights) * error in the current layer
+
+weights output from low-activation neurons learn slowly
