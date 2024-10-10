@@ -149,3 +149,29 @@ the error is equal to the rate of change here (since bias is a constant?)
 in other words the rate of change in cost for a given weights = the activations in previous layer (the input to the weights) * error in the current layer
 
 weights output from low-activation neurons learn slowly
+
+### The backpropagation algorithm
+- computing the gradient of the cost function
+- error vectors are first computed at the last (aka output) layer
+- it computes the gradient of the cost function for a single training example
+
+Algorithm for single example
+1. Set the input layer
+2. Feedforward: compute activations for each layer
+3. Output Error: compute the error vector
+4. Backpropagate the error: for each layer compute the error at that layer
+5. Return the gradient of the cost fucntion
+
+in practice we compute the gradient for many training examples like in stochastic gradient descent - given a mini-batch of m examples
+
+Algorithm for batches
+outer loop generates mini-batches of training data
+1. input training examples
+2. For each training example
+	1. set input
+	2. feedforward and save activations at each layer
+	3. compute final output layer error
+	4. backpropagate error -computing error at each layer
+3. for each layer update weights and biases with gradient descent average over the batch
+
+### The code for backpropagation
