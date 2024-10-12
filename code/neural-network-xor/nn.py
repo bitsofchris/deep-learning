@@ -126,5 +126,9 @@ xor_data_np = [(np.array(input).reshape(-1, 1), np.array(output).reshape(-1, 1))
 if __name__ == "__main__":
     net = Network([2, 5, 1])
     print(f"First Activation: {net.feedforward(np.array([[0], [0]]))}")
-    net.update_mini_batch(xor_data_np, 0.1)
-    print(f"Final Activation: {net.feedforward(np.array([[0], [0]]))}")
+    for i in range(9000):
+        net.update_mini_batch(xor_data_np, 1.)
+    print(f"Final Activation 0,0: {net.feedforward(np.array([[0], [0]]))}")
+    print(f"Final Activation 0,1: {net.feedforward(np.array([[0], [1]]))}")
+    print(f"Final Activation 1,0: {net.feedforward(np.array([[1], [0]]))}")
+    print(f"Final Activation 1,1: {net.feedforward(np.array([[1], [1]]))}")
