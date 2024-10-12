@@ -24,9 +24,9 @@ class Network:
     def _sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
 
-    def _sigmoid_prime(z):
+    def _sigmoid_prime(self, z):
         # derivative of the sigmoid function
-        return _sigmoid(z)*(1-_sigmoid(z))
+        return self._sigmoid(z)*(1-self._sigmoid(z))
 
     def _mse_loss_function(self, y_true, y_pred):
         # Mean Squared Error loss function
@@ -88,12 +88,12 @@ class Network:
         for bias, weight in zip(self.biases, self.weights):
             z = np.dot(weight, activation)+bias
             zs.append(z)
-            activation = sigmoid(z)
+            activation = self._sigmoid(z)
             activations.append(activation)
         # backward pass
         # initial error is the derivative of the cost function with respect to the output activations (the final layer)
-        delta = self.cost_derivative(activations[-1], y) * \
-            sigmoid_prime(zs[-1])
+        delta = self._cost_derivative(activations[-1], y) * \
+            self._sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
         # delta is error for output layer
         # activations[-2] is the output of the layer before the output layer
@@ -102,9 +102,9 @@ class Network:
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
 
         # backpropagate the error to all the previous layers
-        for l in xrange(2, self.num_layers):
+        for l in range(2, self.num_layers):
             z = zs[-l] # take the z value of the layer we are currently on, already precomputed
-            sp = sigmoid_prime(z)
+            sp = self._sigmoid_prime(z)
             # calculate the error for the current layer
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             # update the gradients for the biases and weights at the current layer
@@ -119,7 +119,12 @@ xor_data = [
     [(1, 0), (1,)],
     [(1, 1), (0,)],
 ]
+# Convert xor_data to an array of np.arrays
+xor_data_np = [(np.array(input).reshape(-1, 1), np.array(output).reshape(-1, 1)) for input, output in xor_data]
+
 
 if __name__ == "__main__":
     net = Network([2, 5, 1])
+    print(f"First Activation: {net.feedforward(np.array([[0], [0]]))}")
+    net.update_mini_batch(xor_data_np, 0.1)
     print(f"Final Activation: {net.feedforward(np.array([[0], [0]]))}")
