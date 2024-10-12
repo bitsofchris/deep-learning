@@ -8,5 +8,7 @@ Partial derivative - different notation, how much an input changes output of a m
 To get the partial derivative you just pretend there are constant values in the other variables and then take the derivative like normal. Basically holding everything fixed, seeing how changing one variable changes the output
 
 
-# To Learn 
-- The Chain Rule
+# Chain Rule
+allows you to compute the derivative of a composite function
+
+in backpropagation we can re-use parts of the chain without having to re-calculate

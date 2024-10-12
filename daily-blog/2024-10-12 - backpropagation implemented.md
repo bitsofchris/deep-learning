@@ -26,7 +26,25 @@ backprop()
 - then using that we compute the delta and the gradient for our output layer
 - once we have that we can compute the delta and gradient for every preceeding layer
 
-*in our example we loop through each preceeding layer, but I believe the magic of backprop is that this can be done in parallel once you have the output layer*
+### The magic of Backprop
+Backprop is sequential- it relies on computations in the previous layer, starting with output.
+
+It’s efficient because of reusing computations via the chain rule from calculus.
+
+You compute the error in one layer and then use that error to compute error of previous layer. Rather than getting output gradient for each weight independently, you walk the network backwards once.
+
+You can parallelize calculations:
+- within a layer - GPUs help here with matrix operations
+- across mini batches
+
+The backprop algorithm is sequential but calculations can be parallelized within the layer and across the mini batch (multiple samples can be done in parallel).
+
+### Clarifying gradient and gradient descent
+- gradient - a vector of the partial derivatives for each parameter in the network with respect to the cost function
+- gradient descent - an algorithm for minimizing the cost function. 
+	- calculate the gradient
+	- use the negative gradient with a learning rate (controls how fast to update)
+	- update the weights and biases
 
 ### more data + more compute = more useful networks
 This has been a theme I've noticed so far in my learning and the industry as a whole.

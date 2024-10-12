@@ -189,3 +189,6 @@ Changing a single weight in one layer -> will change the activation of the conne
 So one tiny weight change in layer 1 can have ripple effects throughout the rest of the network
 
 Backprop is basically the method that tracks how tiny changes to weights and biases propagate through the network to reach the output and impact the cost function
+
+
+# Chapter 3 - Improving the way neural networks learn
