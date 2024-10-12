@@ -174,4 +174,18 @@ outer loop generates mini-batches of training data
 	4. backpropagate error -computing error at each layer
 3. for each layer update weights and biases with gradient descent average over the batch
 
-### The code for backpropagation
+
+### Is backpropagation a fast algorithm?
+It just needs one forward pass and one backward pass through the network to compute the gradient.
+
+The computational efficiency here enabled neural networks to be used at other problems (seems to be a trend, that as we get more data, more compute/more efficiency -> networks get more powerful/useful)
+
+We can also compute gradients for other layers in parallel? 
+
+
+### Backprop the big picture
+Changing a single weight in one layer -> will change the activation of the connected neuron in the next layer -> which has an impact on ALL the activations in the following layer (since that neuron is connected to all neurons in next layer)
+
+So one tiny weight change in layer 1 can have ripple effects throughout the rest of the network
+
+Backprop is basically the method that tracks how tiny changes to weights and biases propagate through the network to reach the output and impact the cost function

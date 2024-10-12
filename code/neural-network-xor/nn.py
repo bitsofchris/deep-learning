@@ -24,9 +24,17 @@ class Network:
     def _sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
 
+    def _sigmoid_prime(z):
+        # derivative of the sigmoid function
+        return _sigmoid(z)*(1-_sigmoid(z))
+
     def _mse_loss_function(self, y_true, y_pred):
         # Mean Squared Error loss function
         return np.mean((y_true - y_pred) ** 2)
+    
+    def _cost_derivative(self, output_activations, y):
+        # returns the partial derivatives of the cost function with respect to the output activations 
+        return (output_activations-y) 
     
     def feedforward(self, activations):
         for bias, weights in zip(self.biases, self.weights):
@@ -65,11 +73,44 @@ class Network:
 
     def backprop(self, x, y):
         """
-        Return a tuple (nabla_biases, nabla_weights) that is the gradient
-        for the cost function. The nablas are lists of numpy arrays in the 
-        same structure as our self.biases and self.weights.
+        Returns the gradient for the cost function of a given sample x.
         """
-        pass
+        # initialize as list of zeroes with same shape as our network
+        nabla_b = [np.zeros(b.shape) for b in self.biases]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+        # feedforward and store all z vectors and activation vectors
+        # z value is the weighted sum of the inputs to the neuron + bias
+        # activation is the output of the neuron after applying the activation function to our z value
+        activation = x
+        activations = [x] 
+        zs = []
+        # for each layer in the network, compute the z and activation values
+        for bias, weight in zip(self.biases, self.weights):
+            z = np.dot(weight, activation)+bias
+            zs.append(z)
+            activation = sigmoid(z)
+            activations.append(activation)
+        # backward pass
+        # initial error is the derivative of the cost function with respect to the output activations (the final layer)
+        delta = self.cost_derivative(activations[-1], y) * \
+            sigmoid_prime(zs[-1])
+        nabla_b[-1] = delta
+        # delta is error for output layer
+        # activations[-2] is the output of the layer before the output layer
+        # nabla_w[-1] is the gradient of the cost function with respect to the weights connecting
+        # second last layer (or last hidden layer) to the output layer
+        nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+
+        # backpropagate the error to all the previous layers
+        for l in xrange(2, self.num_layers):
+            z = zs[-l] # take the z value of the layer we are currently on, already precomputed
+            sp = sigmoid_prime(z)
+            # calculate the error for the current layer
+            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+            # update the gradients for the biases and weights at the current layer
+            nabla_b[-l] = delta
+            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+        return (nabla_b, nabla_w)
 
 # [(input x1 x2), (output y1)]
 xor_data = [
