@@ -83,12 +83,12 @@ class Network:
 
     def evaluate(self, test_data):
         """
-        Evaulate the test_data by feeding it through the network and comparing the output to the expected output.
+        Return number of test inputs correct result.
+        For XOR our result is the value of the output neuron
         """
-        raise NotImplemented
-        # test_results = [(round(self.feedforward(x)[0][0]), y)
-        #                 for (x, y) in test_data]
-        # return sum(int(x == y) for (x, y) in test_results)
+        test_results = [(round(self.feedforward(x)[0][0]), y)
+                        for (x, y) in test_data]
+        return sum(int(x == y) for (x, y) in test_results)
 
     def SGD(self, training_data, epochs, learning_rate, mini_batch_size, test_data=None, eval_interval=10):
         """
@@ -113,8 +113,20 @@ class Network:
                 print(f"Epoch {epoch}: {self.evaluate(test_data)} / {n_test}")
 
 
+# Temp for testing SGD
+# [(input x1 x2), (output y1)]
+xor_data = [
+    [(0, 0), (0,)],
+    [(0, 1), (1,)],
+    [(1, 0), (1,)],
+    [(1, 1), (0,)],
+]
+# Convert xor_data to an array of np.arrays
+xor_data_np = [(np.array(input).reshape(-1, 1), np.array(output).reshape(-1, 1)) for input, output in xor_data]
+
+
 
 
 if __name__ == "__main__":
     net = Network([2, 5, 1])
-    net.SGD()
+    net.SGD(xor_data_np, 10000, 0.1, 2, xor_data_np, 1000)
