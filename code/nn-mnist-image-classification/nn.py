@@ -85,10 +85,9 @@ class Network:
         """
         Evaulate the test_data by feeding it through the network and comparing the output to the expected output.
         """
-        raise NotImplemented
-        # test_results = [(round(self.feedforward(x)[0][0]), y)
-        #                 for (x, y) in test_data]
-        # return sum(int(x == y) for (x, y) in test_results)
+        test_results = [(np.argmax(self.feedforward(x)), y)
+                        for (x, y) in test_data]
+        return sum(int(x == y) for (x, y) in test_results)
 
     def SGD(self, training_data, epochs, learning_rate, mini_batch_size, test_data=None, eval_interval=10):
         """
@@ -112,9 +111,30 @@ class Network:
             if test_data and epoch % eval_interval == 0:
                 print(f"Epoch {epoch}: {self.evaluate(test_data)} / {n_test}")
 
+    def load_data(self, max_samples=None):
+        """
+        Load the training and test data from the .npy files.
+
+        Return a tuple of the training data and test data.
+        Each elemnt is a list of tuples (x, y) where x is the input image and y is the label.
+        """
+        train_images = np.load('data/train_images.npy')
+        train_labels = np.load('data/train_labels.npy')
+        test_images = np.load('data/test_images.npy')
+        test_labels = np.load('data/test_labels.npy')
+        if max_samples:
+            train_images = train_images[:max_samples]
+            train_labels = train_labels[:max_samples]
+            test_images = test_images[:max_samples]
+            test_labels = test_labels[:max_samples]
+        train_data = list(zip(train_images, train_labels))
+        test_data = list(zip(test_images, test_labels))
+        return train_data, test_data
+
 
 
 
 if __name__ == "__main__":
-    net = Network([2, 5, 1])
-    net.SGD()
+    net = Network([784, 30, 10])
+    train, test = net.load_data(max_samples=10000)
+    net.SGD(train, epochs=200, learning_rate=1, mini_batch_size=50, test_data=test, eval_interval=20)
