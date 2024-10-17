@@ -20,9 +20,6 @@ class Network:
     def _sigmoid_prime(self, z):
         return self._sigmoid(z)*(1-self._sigmoid(z))
 
-    def _mse_loss_function(self, y_true, y_pred):
-        return np.mean((y_true - y_pred) ** 2)
-    
     def _cost_derivative(self, output_activations, y):
         # returns the partial derivatives of the cost function with respect to the output activations 
         return (output_activations-y) 
@@ -85,8 +82,9 @@ class Network:
         """
         Evaulate the test_data by feeding it through the network and comparing the output to the expected output.
         """
-        test_results = [(np.argmax(self.feedforward(x)), y)
+        test_results = [(np.argmax(self.feedforward(x)), np.argmax(y))
                         for (x, y) in test_data]
+
         return sum(int(x == y) for (x, y) in test_results)
 
     def SGD(self, training_data, epochs, learning_rate, mini_batch_size, test_data=None, eval_interval=10):
@@ -118,10 +116,10 @@ class Network:
         Return a tuple of the training data and test data.
         Each elemnt is a list of tuples (x, y) where x is the input image and y is the label.
         """
-        train_images = np.load('data/train_images.npy')
-        train_labels = np.load('data/train_labels.npy')
-        test_images = np.load('data/test_images.npy')
-        test_labels = np.load('data/test_labels.npy')
+        train_images = np.load('code/nn-mnist-image-classification/data/train_images.npy')
+        train_labels = np.load('code/nn-mnist-image-classification/data/train_labels.npy')
+        test_images = np.load('code/nn-mnist-image-classification/data/test_images.npy')
+        test_labels = np.load('code/nn-mnist-image-classification/data/test_labels.npy')
         if max_samples:
             train_images = train_images[:max_samples]
             train_labels = train_labels[:max_samples]
@@ -129,12 +127,15 @@ class Network:
             test_labels = test_labels[:max_samples]
         train_data = list(zip(train_images, train_labels))
         test_data = list(zip(test_images, test_labels))
-        return train_data, test_data
+        # Slice the first 10000 samples from the training data to use as validation data
+        valid_data = train_data[:10000]
+        train_data = train_data[10000:]
+        return train_data, valid_data, test_data
 
 
 
 
 if __name__ == "__main__":
     net = Network([784, 30, 10])
-    train, test = net.load_data(max_samples=10000)
-    net.SGD(train, epochs=200, learning_rate=1, mini_batch_size=50, test_data=test, eval_interval=20)
+    train, valid, test = net.load_data(max_samples=None)
+    net.SGD(train, epochs=30, learning_rate=3, mini_batch_size=10, test_data=valid, eval_interval=1)
