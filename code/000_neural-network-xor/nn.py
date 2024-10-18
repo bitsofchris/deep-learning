@@ -1,6 +1,7 @@
 from typing import List
 import numpy as np
 
+
 class Network:
     def __init__(self, sizes: List[int]):
         """
@@ -26,16 +27,16 @@ class Network:
 
     def _sigmoid_prime(self, z):
         # derivative of the sigmoid function
-        return self._sigmoid(z)*(1-self._sigmoid(z))
+        return self._sigmoid(z) * (1 - self._sigmoid(z))
 
     def _mse_loss_function(self, y_true, y_pred):
         # Mean Squared Error loss function
         return np.mean((y_true - y_pred) ** 2)
-    
+
     def _cost_derivative(self, output_activations, y):
-        # returns the partial derivatives of the cost function with respect to the output activations 
-        return (output_activations-y) 
-    
+        # returns the partial derivatives of the cost function with respect to the output activations
+        return output_activations - y
+
     def feedforward(self, activations):
         for bias, weights in zip(self.biases, self.weights):
             # First pass
@@ -68,8 +69,14 @@ class Network:
         # zip pairs the accumulated gradients with the actual weights & biases
         # for each layer and it's gradient, compute the average gradient for this mini batch
         # and then we subtract this average from the current weights & biases to do the update
-        self.weights = [current_weights - (eta/len(mini_batch)) * nabla_w for current_weights, nabla_w in zip(self.weights, nabla_w)]
-        self.biases = [current_biases - (eta/len(mini_batch)) * nabla_b for current_biases, nabla_b in zip(self.biases, nabla_b)]
+        self.weights = [
+            current_weights - (eta / len(mini_batch)) * nabla_w
+            for current_weights, nabla_w in zip(self.weights, nabla_w)
+        ]
+        self.biases = [
+            current_biases - (eta / len(mini_batch)) * nabla_b
+            for current_biases, nabla_b in zip(self.biases, nabla_b)
+        ]
 
     def backprop(self, x, y):
         """
@@ -82,18 +89,17 @@ class Network:
         # z value is the weighted sum of the inputs to the neuron + bias
         # activation is the output of the neuron after applying the activation function to our z value
         activation = x
-        activations = [x] 
+        activations = [x]
         zs = []
         # for each layer in the network, compute the z and activation values
         for bias, weight in zip(self.biases, self.weights):
-            z = np.dot(weight, activation)+bias
+            z = np.dot(weight, activation) + bias
             zs.append(z)
             activation = self._sigmoid(z)
             activations.append(activation)
         # backward pass
         # initial error is the derivative of the cost function with respect to the output activations (the final layer)
-        delta = self._cost_derivative(activations[-1], y) * \
-            self._sigmoid_prime(zs[-1])
+        delta = self._cost_derivative(activations[-1], y) * self._sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
         # delta is error for output layer
         # activations[-2] is the output of the layer before the output layer
@@ -103,14 +109,17 @@ class Network:
 
         # backpropagate the error to all the previous layers
         for l in range(2, self.num_layers):
-            z = zs[-l] # take the z value of the layer we are currently on, already precomputed
+            z = zs[
+                -l
+            ]  # take the z value of the layer we are currently on, already precomputed
             sp = self._sigmoid_prime(z)
             # calculate the error for the current layer
-            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+            delta = np.dot(self.weights[-l + 1].transpose(), delta) * sp
             # update the gradients for the biases and weights at the current layer
             nabla_b[-l] = delta
-            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+            nabla_w[-l] = np.dot(delta, activations[-l - 1].transpose())
         return (nabla_b, nabla_w)
+
 
 # [(input x1 x2), (output y1)]
 xor_data = [
@@ -120,14 +129,17 @@ xor_data = [
     [(1, 1), (0,)],
 ]
 # Convert xor_data to an array of np.arrays
-xor_data_np = [(np.array(input).reshape(-1, 1), np.array(output).reshape(-1, 1)) for input, output in xor_data]
+xor_data_np = [
+    (np.array(input).reshape(-1, 1), np.array(output).reshape(-1, 1))
+    for input, output in xor_data
+]
 
 
 if __name__ == "__main__":
     net = Network([2, 5, 1])
     print(f"First Activation: {net.feedforward(np.array([[0], [0]]))}")
     for i in range(9000):
-        net.update_mini_batch(xor_data_np, 1.)
+        net.update_mini_batch(xor_data_np, 1.0)
     print(f"Final Activation 0,0: {net.feedforward(np.array([[0], [0]]))}")
     print(f"Final Activation 0,1: {net.feedforward(np.array([[0], [1]]))}")
     print(f"Final Activation 1,0: {net.feedforward(np.array([[1], [0]]))}")
