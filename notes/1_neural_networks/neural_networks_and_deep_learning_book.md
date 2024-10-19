@@ -192,3 +192,61 @@ Backprop is basically the method that tracks how tiny changes to weights and bia
 
 
 # Chapter 3 - Improving the way neural networks learn
+
+Backprop is our vanilla/ basic algorithm
+
+This chapter teaches
+- a better cost function: cross-entropy
+- regularization methods: L1, L2, dropout, artificial expansion
+	- these help our networks generalize beyond the training data
+- better method for initializing weights
+- heuristics to choose good hyper-parameteres
+
+### Cross-Entropy Cost Function
+- We want things to learn faster when more wrong
+- slow learning is really the same as having small partial derivatives of our cost function
+- the graph of our sigmoid function - is an S, when close to 1 or 0 or curve is very flat
+	- looking for a cost function that eliminates derivative of sigmoid to avoid these slow learning periods
+
+Cross-entropy as a cost function addresses this slow down in learning.
+
+
+
+n= total number of training samples
+
+
+Properties of Cross-entropy
+- it's non-negative
+- if neuron output is close to desired output for all inputs, cross entropy is close to 0
+- and it avoids the problem of learning slow down
+
+Partial derivative of cross-entropy cost w.r.t. weights.
+- the rate at which our weights learn is controlled by the error in the output (sigmoid z - y)
+
+Partial derivative of cost w.r.t. bias
+
+
+- cross entropy helps us learn faster when our neuron is very wrong
+- cross entropy almost always better choice when using ouput sigmoid neurons - since starting with random weights, if we are really wrong and close to 0 or 1, we can learn fast when really wrong now
+- neuron saturation is an important problem in neural networks (when its heavily 1 or 0)
+	- it causes this learning slowdown when using a quadratic cost function
+
+
+Cross-entropy is a measure of surprise. How surprised we are (on average) when we learn the true output value.
+
+
+
+### Softmax
+Softmax layers of neurons - another approach to address the problem of learning slowdown.
+- defines a new type of output layer
+- sum of the output activations are guaranteed to sum to 1
+
+The output from softmax are a probability distribution
+
+Use with a log-likelihood cost function.
+
+Softmax + log-likelihood cost = whenever you want to interpret output activations as probabilities
+
+
+
+### Overfitting and regularization

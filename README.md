@@ -15,6 +15,7 @@ Goal: Implement a basic neural network from scratch to understand these foundati
 Deliverable:
 - [DONE](code/000_neural-network-xor/nn_SGD.py) A network that solves XOR with no ML libraries
 - [DONE](code/001_nn-mnist-image-classification/nn-pytorch.py) A network that solves image classification (maybe with PyTorch b/c I want to learn PyTorch)
+- Implementing advanced techniques from [chapter 3](http://neuralnetworksanddeeplearning.com/chap3.html) from scratch on one of my networks
 
 ## A basic Transformer Model
 Goal: Implement the Transformer architecture to understand attention mechanisms.
