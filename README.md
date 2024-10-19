@@ -13,8 +13,8 @@ If you'd like to learn more about me or follow my work head to [bitsofchris.com]
 Goal: Implement a basic neural network from scratch to understand these foundational concepts.
 
 Deliverable:
-- A network that solves XOR with no ML libraries
-- A network that solves image classification (maybe with PyTorch b/c I want to learn PyTorch)
+- [DONE](code/000_neural-network-xor/nn_SGD.py) A network that solves XOR with no ML libraries
+- [DONE](code/001_nn-mnist-image-classification/nn-pytorch.py) A network that solves image classification (maybe with PyTorch b/c I want to learn PyTorch)
 
 ## A basic Transformer Model
 Goal: Implement the Transformer architecture to understand attention mechanisms.
