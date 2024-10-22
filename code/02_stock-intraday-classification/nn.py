@@ -6,7 +6,34 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import torch
+from torch import nn
+from torch.utils.data import TensorDataset, DataLoader
 
+class StockPredictionModel(nn.Module):
+    def __init__(self, input_size):
+        super().__init__()
+        self.flatten = nn.Flatten()
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(input_size, 128),
+            nn.ReLU(),
+            nn.Dropout(0.2), # randomly zero out some neurons to help training
+            
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            
+            nn.Linear(32, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        x = self.flatten(x)
+        logits = self.linear_relu_stack(x)
+        return logits
 
 def _init_argparse():
     parser = argparse.ArgumentParser(description="Process some CSV data.")
@@ -58,6 +85,45 @@ def preprocess_data(df, target_column="Target", test_size=0.15, val_size=0.15):
         scaler,
     )
 
+def train(dataloader, model, loss_fn, optimizer, device):
+    size = len(dataloader.dataset)
+    model.train()
+    for batch, (X, y) in enumerate(dataloader):
+        X, y = X.to(device), y.to(device)  # TODO - what does this do?
+
+        # Compute prediction error
+        pred = model(X)
+        loss = loss_fn(pred, y)
+
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if batch % 100 == 0:
+            loss, current = loss.item(), batch * len(X)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+
+# Eval
+def test(dataloader, model, loss_fn, device):
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    model.eval()
+    test_loss, correct = 0, 0
+    with torch.no_grad():
+        for X, y in dataloader:
+            X, y = X.to(device), y.to(device)
+            pred = model(X)
+            test_loss += loss_fn(pred, y).item()
+            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+    test_loss /= num_batches
+    correct /= size
+    print(
+        f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n"
+    )
+
+
 
 def run(file_path):
     # Load & Pre-Process Data
@@ -68,6 +134,36 @@ def run(file_path):
     print(f"Training set shape: {X_train.shape}")
     print(f"Validation set shape: {X_val.shape}")
     print(f"Test set shape: {X_test.shape}")
+
+    # Define Model
+    model = StockPredictionModel(input_size=X_train.shape[1])
+
+    # Loss function and optimizer
+    loss_fn = nn.BCELoss()  # Binary Cross Entropy Loss
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    # Train
+    # Get cpu, gpu or mps device for training.
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available() else "cpu"
+    )
+    batch_size = 32
+    train_dataset = TensorDataset(X_train, y_train)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dataset = TensorDataset(X_val, y_val)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    test_dataset = TensorDataset(X_test, y_test)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size)
+
+    # Run it all
+    epochs = 5
+    for t in range(epochs):
+        print(f"Epoch {t+1}\n-------------------------------")
+        train(train_loader, model, loss_fn, optimizer, device)
+        test(test_loader, model, loss_fn, device)
+
 
 
 if __name__ == "__main__":
