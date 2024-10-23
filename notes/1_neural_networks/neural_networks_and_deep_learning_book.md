@@ -250,3 +250,13 @@ Softmax + log-likelihood cost = whenever you want to interpret output activation
 
 
 ### Overfitting and regularization
+- too many free parameters -> too much freedom for a model and eventually it can describe anything without being useful to generalize
+- signs of overfitting 
+	- cost on training goes down while cost on validation data goes up
+	- accuracy on the training data is too high 
+	- accuracy improves and then hits a wall
+- need way of detecting overfitting so not to overtrain
+	- compute accraucy on validation data each epoch, if saturated - stop training
+- More data often helps in preventing overfitting
+
+### Regularization
