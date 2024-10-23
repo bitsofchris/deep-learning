@@ -43,6 +43,12 @@ def _init_argparse():
         default=os.path.join(os.getcwd(), "data/hourly_data_features.csv"),
         help="Path to the CSV file (default: current directory)",
     )
+    parser.add_argument(
+        "--learning_rate",
+        type=float,
+        default=0.001,
+        help="Learning rate for the optimizer",
+    )
     return parser
 
 
@@ -72,11 +78,11 @@ def preprocess_data(df, target_column="Target", test_size=0.15, val_size=0.15):
 
     # Convert to PyTorch tensors
     X_train_tensor = torch.FloatTensor(X_train_scaled)
-    y_train_tensor = torch.FloatTensor(y_train.values)
+    y_train_tensor = torch.FloatTensor(y_train.values).view(-1, 1)
     X_val_tensor = torch.FloatTensor(X_val_scaled)
-    y_val_tensor = torch.FloatTensor(y_val.values)
+    y_val_tensor = torch.FloatTensor(y_val.values).view(-1, 1)
     X_test_tensor = torch.FloatTensor(X_test_scaled)
-    y_test_tensor = torch.FloatTensor(y_test.values)
+    y_test_tensor = torch.FloatTensor(y_test.values).view(-1, 1)
 
     return (
         (X_train_tensor, y_train_tensor),
@@ -116,7 +122,8 @@ def test(dataloader, model, loss_fn, device):
             X, y = X.to(device), y.to(device)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            pred_rounded = torch.round(pred)
+            correct += (pred_rounded == y).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
     print(
@@ -125,7 +132,7 @@ def test(dataloader, model, loss_fn, device):
 
 
 
-def run(file_path):
+def run(file_path, learning_rate=0.001, epochs=50):
     # Load & Pre-Process Data
     df = pd.read_csv(file_path)
     # print(df.describe())
@@ -140,7 +147,7 @@ def run(file_path):
 
     # Loss function and optimizer
     loss_fn = nn.BCELoss()  # Binary Cross Entropy Loss
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # Train
     # Get cpu, gpu or mps device for training.
@@ -149,6 +156,7 @@ def run(file_path):
         if torch.cuda.is_available()
         else "mps" if torch.backends.mps.is_available() else "cpu"
     )
+    model = model.to(device)
     batch_size = 32
     train_dataset = TensorDataset(X_train, y_train)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -158,7 +166,6 @@ def run(file_path):
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
     # Run it all
-    epochs = 5
     for t in range(epochs):
         print(f"Epoch {t+1}\n-------------------------------")
         train(train_loader, model, loss_fn, optimizer, device)
@@ -170,4 +177,4 @@ if __name__ == "__main__":
     parser = _init_argparse()
     args = parser.parse_args()
 
-    run(args.file_path)
+    run(args.file_path, learning_rate=args.learning_rate)
