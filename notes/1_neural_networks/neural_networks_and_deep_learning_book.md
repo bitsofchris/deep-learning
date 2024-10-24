@@ -236,7 +236,7 @@ Cross-entropy is a measure of surprise. How surprised we are (on average) when w
 
 
 
-### Softmax
+##### Softmax
 Softmax layers of neurons - another approach to address the problem of learning slowdown.
 - defines a new type of output layer
 - sum of the output activations are guaranteed to sum to 1
@@ -253,10 +253,69 @@ Softmax + log-likelihood cost = whenever you want to interpret output activation
 - too many free parameters -> too much freedom for a model and eventually it can describe anything without being useful to generalize
 - signs of overfitting 
 	- cost on training goes down while cost on validation data goes up
-	- accuracy on the training data is too high 
+	- accuracy on the training data is too high (gap between train and test is wide)
 	- accuracy improves and then hits a wall
 - need way of detecting overfitting so not to overtrain
 	- compute accraucy on validation data each epoch, if saturated - stop training
 - More data often helps in preventing overfitting
 
-### Regularization
+##### Regularization
+
+- regularization techniques help reduce overfitting without shrinking the network or getting more data
+- L2 (weight decay) regularization
+	- adds an extra term to the cost function
+- regularization gets the network to prefer small weights
+	- a balance between minimizing original cost function and finding small weights
+	- when regularization parameter is small - prefer original cost function, when high prefer small weights
+
+
+Regularized Cross-Entropy
+(The regularization term is the last part)
+regularization parameter / 2n  *  the sum of all the weights squared
+
+
+- The more samples (the bigger the n) - the bigger weight decay (regularization param) to use.
+- L2 regularization works b/c with out it - over time the weight vector can get large which makes gradient descent have a harder time changing it's direction (with tiny steps) - so we get stuck pointing the weight vector in the same direction 
+
+##### Why does regularization help reduce overfitting
+- all else equal - go for the simpler model/ explanation
+- smaller weights in regularized network -> means network wont chant too much if we change some random inputs
+	- makes it harder to learn "noise" in the data
+	- learns from data seen across the training set
+- larger weights - a network can over calibrate to noise
+
+```
+In a nutshell, regularized networks are constrained to build relatively simple models based on patterns seen often in the training data, and are resistant to learning peculiarities of the noise in the training data.
+```
+
+
+- sometimes though complex explanations are correct
+- remember the true test of the model is how well it does in predicting on unseen data
+- the human brain regularizes very well 
+
+
+##### Other Techniques for Regularization
+* L1 Regularization
+	* different term but still shrinks the weights - but shrinks by a constant amount toward 0 (L2 shrinks by amount proportional to weight)
+* Dropout
+	* modifies the network itself
+	* start by randomly deleting half the hidden neurons
+	* then forward and back propagate
+	* repeating over and over with a new random set of neurons deleted during backprop
+	* gives the effect of averaging across many different networks
+* Artificially increasing training set size
+	* take an image of the digit and transform it in some way to get more training samples
+	* operations should reflect real-world variation, not just adding noise
+
+Some research may just be using new techniques to improve on a benchmark where the method only works on that training set (vs other/ previous techniques).
+
+
+### Weight Initialization
+- can we do better than just initializing with random?
+- saturated hidden neurons (close to 0 or 1) will learn very slowly
+- use a more narrow peak for our gaussian distribution of random weights 
+	- 1 / radical(n in)
+- will learn faster
+
+
+### Revisiting Digit Recognition
