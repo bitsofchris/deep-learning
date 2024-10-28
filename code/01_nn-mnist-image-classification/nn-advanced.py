@@ -2,8 +2,23 @@ from typing import List
 import numpy as np
 
 
+class CrossEntropyCost:
+    @staticmethod
+    def fn(a, y):
+        # Compute the cost for a single sample
+        return np.sum(np.nan_to_num(-y * np.log(a) - (1 - y) * np.log(1 - a)))
+
+    @staticmethod
+    def delta(z, a, y):
+        # Compute the error for the output layer, used by the backpropagation algorithm
+        # z is not needed in this function but keeps a consistent interfact for cost functions
+        # cross entropy learns better because it avoids the learning slowdown that occurs when the sigmoid function saturates a neuron
+        # so remember the z is the output of the neuron before the activation function is applied and is not used here
+        return a - y
+
+
 class Network:
-    def __init__(self, sizes: List[int]):
+    def __init__(self, sizes: List[int], cost=CrossEntropyCost):
         """
         Sizes is a list of the number of neurons in each layer of the network.
         0th element = input layer
@@ -12,8 +27,25 @@ class Network:
         """
         self.sizes = sizes
         self.num_layers = len(sizes)
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
+        self._default_weight_initializer()
+        self.cost = cost
+
+
+    def _default_weight_initializer(self):
+        """
+        Initialize weights using a Gaussian distribution with mean 0 and standard deviation 1.
+        """
+        # dont need biases for input layer
+        self.biases = [np.random.randn(y, 1) for y in self.sizes[1:]]
+        self.weights = [np.random.randn(y, x)/np.sqrt(x) for x, y in zip(self.sizes[:-1], self.sizes[1:])]
+
+    def _large_weight_initializer(self):
+        """
+        From the previous example, we know that the sigmoid function saturates when the input is very large.
+        This one can lead to slower learning.
+        """
+        self.biases = [np.random.randn(y, 1) for y in self.sizes[1:]]
+        self.weights = [np.random.randn(y, x) for x, y in zip(self.sizes[:-1], self.sizes[1:])]
 
     def _sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
@@ -32,11 +64,12 @@ class Network:
             activations = self._sigmoid(z)
         return activations
 
-    def update_mini_batch(self, mini_batch, eta):
+    def update_mini_batch(self, mini_batch, eta, lmbda, n):
         """
         Applies gradient descent to a single mini batch.
         eta = learning rate (controls step size of updates to weights & biases)
         nabla = gradient vector
+        lmbda = regularization parameter
         """
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
@@ -47,8 +80,9 @@ class Network:
             nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
         # Update weights and biases with the average gradient for the mini batch
+        # Regularization term is added to the weights (1-eta * (lmbda/n)) * <previous weight update>
         self.weights = [
-            current_weights - (eta / len(mini_batch)) * nabla_w
+            (1-eta * (lmbda/n)) * current_weights - (eta / len(mini_batch)) * nabla_w
             for current_weights, nabla_w in zip(self.weights, nabla_w)
         ]
         self.biases = [
@@ -72,7 +106,7 @@ class Network:
             activation = self._sigmoid(z)
             activations.append(activation)
         # backward pass for output layer
-        delta = self._cost_derivative(activations[-1], y) * self._sigmoid_prime(zs[-1])
+        delta = (self.cost).delta(zs[-1], activations[-1], y)
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # backward pass for the rest of the layers
@@ -100,6 +134,7 @@ class Network:
         epochs,
         learning_rate,
         mini_batch_size,
+        lmbda=0.0,
         test_data=None,
         eval_interval=10,
     ):
@@ -123,7 +158,7 @@ class Network:
             ]
             # Update weights and biases for each mini batch
             for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, learning_rate)
+                self.update_mini_batch(mini_batch, learning_rate, lmbda, len(training_data))
             if test_data and epoch % eval_interval == 0:
                 print(f"Epoch {epoch}: {self.evaluate(test_data)} / {n_test}")
 
@@ -135,13 +170,13 @@ class Network:
         Each elemnt is a list of tuples (x, y) where x is the input image and y is the label.
         """
         train_images = np.load(
-            "code/nn-mnist-image-classification/data/train_images.npy"
+            "code/01_nn-mnist-image-classification/data/train_images.npy"
         )
         train_labels = np.load(
-            "code/nn-mnist-image-classification/data/train_labels.npy"
+            "code/01_nn-mnist-image-classification/data/train_labels.npy"
         )
-        test_images = np.load("code/nn-mnist-image-classification/data/test_images.npy")
-        test_labels = np.load("code/nn-mnist-image-classification/data/test_labels.npy")
+        test_images = np.load("code/01_nn-mnist-image-classification/data/test_images.npy")
+        test_labels = np.load("code/01_nn-mnist-image-classification/data/test_labels.npy")
         if max_samples:
             train_images = train_images[:max_samples]
             train_labels = train_labels[:max_samples]
@@ -156,13 +191,14 @@ class Network:
 
 
 if __name__ == "__main__":
-    net = Network([784, 30, 10])
+    net = Network([784, 30, 10], cost=CrossEntropyCost)
     train, valid, test = net.load_data(max_samples=None)
     net.SGD(
         train,
         epochs=30,
-        learning_rate=3,
+        learning_rate=0.5,
         mini_batch_size=10,
         test_data=valid,
+        lmbda=5.0,
         eval_interval=1,
     )
