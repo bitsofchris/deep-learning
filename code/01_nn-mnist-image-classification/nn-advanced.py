@@ -196,7 +196,7 @@ if __name__ == "__main__":
     net.SGD(
         train,
         epochs=30,
-        learning_rate=0.5,
+        learning_rate=0.25,
         mini_batch_size=10,
         test_data=valid,
         lmbda=5.0,

@@ -319,3 +319,63 @@ Some research may just be using new techniques to improve on a benchmark where t
 
 
 ### Revisiting Digit Recognition
+done - L2 was a very small change to implement in the update mini batch
+and then a very small change in the weights initialization
+
+
+### How to choose a neural network's hyper-parameters?
+- first goal on a new problem is to get ANY learning (better than chance)
+	- break it down -> ie. for digit classification try to just classify 0s vs 1s
+	- this gets you an easier problem AND faster iteration to experiment
+- During the early stages -> goal is quick feedback from experiments
+- Learning Rate
+	- if too large, the gradient descent is too larger and we overshoot the minimum
+	- Try 0.01, then 0.1, then 1 - looking for where learning rate causes cost to oscillate or increase after first few epochs. Then drop by factor of 10 to find where cost decreases in first few epochs.
+	- trying to get an order of magnitude threshold estimate, then take roughly half of that to start
+- Learning rate schedule
+	- bigger step early in training, smaller step later in training
+- Early stopping = number of epochs
+	- compute classification accuracy on the validation data each epoch, when that stops improving then stop training
+	-  A better rule is to terminate if the best classification accuracy doesn't improve for quite some time - ie. the no improvement in 10 epochs rule
+- Regularization parameter, lambda
+	- Start with 0.0 and find the learning rate first
+	- Start lambda at 1.0 and then try up or down by factors of 10
+	- Get the order of magnitude and then fine tune
+	- Then re-optimize learning rate with your lambda
+- Mini-batch size
+	- too small and you dont take advantage of parallel compute
+	- too big and you dont update weights often enough
+	- pick the size that shows the fastest improvement, then optimize other params
+- automated techniques like grid search
+- goal - develop a workflow to iterate and experiment quickly, continually bounce back and forth as you hone in on what's working, it's not perfect
+
+### Other Neurons
+- tanh: -1 to 1, needs to normalize the data
+- relu: 0 to z
+- hard to tell when to use each
+
+# Chapter 4 - visual proof that neural nets can compute any function
+
+- universality theorem: NN can compute ANY function
+	- doesn't mean we can build it
+	- neural networks with a single layer can approximate any CONTINUOUS function to the DESIRED precision
+- A very big weight can make z look like a step function, bias will slide the step left or right
+- Assuming this - a very big weight - we can see hidden neurons as multiple step functions joined together. 
+	- Weights into the output layer from hidden layer control the "height" of steps
+
+### Many input variables
+- using two inputs - can build a 3d step function as a tower
+- putting different subnetworks together and modifying weights to output layer you can get many different towers
+
+### conclusion
+- universality states a neural network can compute any function
+- deep networks - do a better job than shallow networks of learning complex concepts and abstractions - well enough to solve real-world problems
+
+# Chapter 5 - why are deep neural networks hard to train
+- mathematical proofs showing that for some functions very shallow circuits require exponentially more circuit elements to compute than do deep circuits
+- more layers can allow us to break things down into sub-problems
+- deep learning using SGD and backpropagation -> problem is different layers are learning at different speeds.
+
+### the vanishing gradient problem
+left off
+
