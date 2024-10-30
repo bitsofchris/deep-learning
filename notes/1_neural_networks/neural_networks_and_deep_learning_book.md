@@ -377,5 +377,56 @@ and then a very small change in the weights initialization
 - deep learning using SGD and backpropagation -> problem is different layers are learning at different speeds.
 
 ### the vanishing gradient problem
-left off
+- in our current network, adding more hidden layers - the later layers will learn much faster than the early layers
+- vanishing gradient problem - the gradient tends to get smaller as you move backward through the hidden layers
+- the gradient in deep neural networks is _unstable_, tending to either explode or vanish in earlier layers
+	- fundamental issue with gradient-based learning
 
+### Unstable gradients in deep neural networks
+- given how we initialize weights randomly with a mean 0, a weight is usually less than 1 intially. And the sigmoid prime at 0 is 1/4, so in general - most activation terms initally are pretty small and when we multiply them together (in backprop from layer to layer) they continually get smaller b/c they are less than 1
+	- I'm a little fuzzy here - but it's generally in this direction
+- The problem is really that the gradient in early layers is the product of the terms from all the layer layers
+	- to get the layers to learn at the same speed - something needs to balance them
+- Otherwise with standard gradient descent - different layers in the network will learn at different speeds
+
+### Unstable gradients in more complex networks
+- same problem, when weights aren't too large - each additional term of weight * z is making the gradient vector smaller
+- large number of terms leads to instability
+
+
+
+# Chapter 6 - deep learning
+- convolutional NN
+- drop-out, data augmentation
+- recurrent nn
+- LSTM
+
+### Introducing convolutional networks
+- initial network - all neurons were fully-connected, this doesn't take into account the spatial structure of the images
+	- input pixels far apart and close together are treated the same
+- CNNs: http://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf
+
+##### local receptive fields
+- inputs are not a vertical line of neurons but rather a 28 x 28 square corresponding to our 28 x 28 image
+- each neuron in the first hidden layer is connected to a SMALL REGION of input neurons (rather than each input neuron connecting to every hidden neuron)
+- this region == local receptive field for that hidden neuron, a little window of pixels
+- each local receptive field - connects to it's own hidden neuron in the first layer
+- ![[Pasted image 20241030070924.png]]
+	- shift over 1 pixel in this example
+- The shift is called STRIDE LENGTH
+
+#####  shared weights
+- in the first layer we use the same weights and bias for each stride through the local receptive field - it's applied to every local receptive field connecting to the first hidden layer
+- weights are N x N matrix that is the size of the local receptive field (5x5) in our example, but its the same weight for every stride
+- This means that the neurons in the first hidden layer detect exactly the same feature just at different locations in the input image
+	- "feature detector" applied over the whole image
+- this map from input to hidden layer - is called a feature map
+	- weights defining this feature map == shared weights
+	- bias == shared bias
+	- this shared weights and bias define a kernel/filter
+- A complete convolutional layer has several different feature maps
+	- each feature map is defined by a set of shared weights and a single shared bias
+- CNNs use much fewer parameters in this first layer than a fully connected NN
+
+##### pooling
+left off
