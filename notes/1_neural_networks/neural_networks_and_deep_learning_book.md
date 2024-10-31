@@ -429,4 +429,17 @@ and then a very small change in the weights initialization
 - CNNs use much fewer parameters in this first layer than a fully connected NN
 
 ##### pooling
+- layers used right after convolutional layers
+- takes each feature map output and prepares a condensed feature map
+- takes a region (say 2x2) from convolutional layer and summarizes it 
+	- max-pooling - outputs the maximum activation in the input region. a way to ask if a feature is found in the region, then it removes the positional info
+	- L2 pooling - sqrt of sum(activation squares) in the region
+- max-pooling applied to each feature map separately
+
+##### putting it all together
+- input neurons as a grid -> convolutional layer using a local receptive field and N feature maps -> max pooling layer applied to each feature maps, smaller region, then fully connecting the max pooled layer to output layer
+
+![CNN Architecture](images/cnns.png)
+
+### convolutional neural networks in practice
 left off
