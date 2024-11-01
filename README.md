@@ -16,7 +16,8 @@ Deliverable:
 - [DONE](code/000_neural-network-xor/nn_SGD.py) A network that solves XOR with no ML libraries
 - [DONE](code/001_nn-mnist-image-classification/nn-pytorch.py) A network that solves image classification (maybe with PyTorch b/c I want to learn PyTorch)
 - [DONE](code/02_stock-intraday-classification/nn.py) A network that predicts if next stock time step is up or down
-- [In-Progress] Implementing advanced techniques from [chapter 3](http://neuralnetworksanddeeplearning.com/chap3.html) from scratch on one of my networks
+- [DONE] Implementing advanced techniques from [chapter 3](http://neuralnetworksanddeeplearning.com/chap3.html) from scratch on one of my networks
+- [In-Progress] Finishing the book, implementing a convolutional neural network.
 
 ## A basic Transformer Model
 Goal: Implement the Transformer architecture to understand attention mechanisms.
