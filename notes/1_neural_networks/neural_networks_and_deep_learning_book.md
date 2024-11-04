@@ -441,5 +441,55 @@ and then a very small change in the weights initialization
 
 ![CNN Architecture](images/cnns.png)
 
+
 ### convolutional neural networks in practice
-left off
+
+- 100 hidden neurons, 60 epochs, learning rate 0.1, mini-batch size of 10
+	- 97.8 on test data - best eval epoch
+- softmax + log likelihood cost function - more common for image classification
+- Full Network
+	- Insert convolutional layer in front of the 100 neuron hidden layer and 10 neuron output layer
+	- this lets the network learn about spatial structure from the convolutional and pooling layers, while the "traditional" hidden layer is a more abstract level
+- LeNet-5 - a network from the original paper
+- rectified linear activation neurons seem to perform better than sigmoid activation functions
+	- theory can't explain this yet (or at least in this book) - when to use what activation function
+- Expand the training data - displace each image by a single pixel
+- Experiments to improve performance
+	- adding another fully connected hidden layer
+	- using dropout on the fully connected layers
+		- reduced epochs but increase neurons
+	- ensemble of networks - get them to vote
+- [Paper](http://arxiv.org/abs/1003.0358) - shows how really big and really deep (5 layers of 2500-500 neurons) with only data augmentation got good results. Bigger + more compute.
+
+##### How convolutional networks help avoid instability in gradient
+- convolutional layers have FEWER parameters
+- regularization - like dropout helps
+- rectified linear units are faster than sigmoid neurons
+- GPUs enabling long training periods
+
+TLDR: "more" training b/c it's faster helps us get past the learning instability.
+
+Other techniques like:
+- data augmentation to make the dataset larger
+- better cost function to avoid learning slowdown
+- good weight initialization to avoid learning slow down
+
+Also contribute to improving our ability to learn in very large networks.
+
+### The code for our CNNs
+(I'll take notes for what to recreate in PyTorch)
+
+Experiments
+- try using dropout on the fully connected layers
+
+FullyConnectedLayer
+- good weight intialization - for a rectified linear function
+
+ConvPoolLayer
+- our convolutional layers
+
+SoftmaxLayer
+- the output layer
+
+Network
+- LEFT OFF HERE
