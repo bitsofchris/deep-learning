@@ -476,6 +476,7 @@ Other techniques like:
 
 Also contribute to improving our ability to learn in very large networks.
 
+
 ### The code for our CNNs
 (I'll take notes for what to recreate in PyTorch)
 
@@ -487,9 +488,108 @@ FullyConnectedLayer
 
 ConvPoolLayer
 - our convolutional layers
+- creates convolutional and a max-pooling layer
 
 SoftmaxLayer
 - the output layer
 
 Network
-- LEFT OFF HERE
+- some Theano specific inputs - using "symbolic outputs" to apply gradient descent
+
+SGD
+- number of mini batches
+- regularized cost function
+- for each epoch
+	- for each mini batch
+		- cost = train(mini batch)
+- In this network
+	- regularized log-likelihood cost function
+
+
+##### PyTorch Network to Build
+Network Architecture
+![[Pasted image 20241105062146.png]]
+- create the architecture above
+	- Conv Layers - convolutional + max pooling
+		- image_shape = batch size, number of feature maps input, image size
+		- filter_shape = number of filters, number of input feature maps, heigh and width
+			- local receptive field size
+		- poolsize = y, x pooling sizes
+- apply dropout to fully connected layers (p=0.5)
+- regularized log-likelihood cost function
+- 60 epochs, learning_rate = 0.03, lambda (regularizaiotn param) = 0.1
+- expand the training data
+
+### Recent Progress in Image Recognition
+- lists several papers 2012-2014 on image recognition progress with ImageNet dataset
+- (I skimmed this section given that this book is 10 years old and recent progress has changed significantly)
+
+### Other approaches to deep neural nets
+this book covered:
+- stochastic gradient descent
+- backpropagation
+- convolutional nets
+- regularization
+- .. and more
+But focused on the MNIST digits problem.
+
+These foundations can hlep learn the many other topics in the field of deep learning.
+
+##### Recurrent neural networks
+We covered feedforward networks where the inputs move once through the network to determine the activations at each neuron.
+
+Recurrent neural networks can use activations or inputs at earlier times to determine current activation of a neuron.
+
+RNNs have some dynamic change over time.
+
+
+##### Long short-term memory units (LSTMs)
+RNNs hard to train initially, unstable gradient problem (gradient gets smaller and smaller as it is propagated back through the layers -> causes extremely slow learning in early layers).
+
+In RNNs gradients are propagated back through layers & back through time.
+
+[LSTMs introduced in 1997](http://dx.doi.org/10.1162/neco.1997.9.8.1735) - help make it easier to train RNNs.
+
+##### Deep belief nets, generative models, and Boltzmann machines
+DBN - can specify values of some features neurons and then run network backwards to generate the input.
+
+DBNs fell out of favor b/c of the success of feedforward and recurrent neural networks.
+
+From the author:
+```
+ My personal opinion is that DBNs and other generative models likely deserve more attention than they are currently receiving. And I won't be surprised if DBNs or a related model one day surpass the currently fashionable models.
+```
+
+Learn more about DBNs:
+- https://www.cs.toronto.edu/~hinton/absps/guideTR.pdf
+- http://www.scholarpedia.org/article/Deep_belief_networks
+
+Interesting Paper
+https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf - Playing Atari with Deep Reinforcement Learning
+- CNN to simplify pixel data into a simpler set of features to then play the game
+
+
+### On the future of neural networks
+intention-driven UI - instead of responding to users' literal queries sytems can use ML to understand what the user meant
+
+We currently understand why NNs perform well very poorly. But again the author makes an interesting prediction that was correct:
+
+```
+I will make one prediction: I believe deep learning is here to stay. The ability to learn hierarchies of concepts, building up multiple layers of abstraction, seems to be fundamental to making sense of the world. This doesn't mean tomorrow's deep learners won't be radically different than today's. We could see major changes in the constituent units used, in the architectures, or in the learning algorithms. Those changes may be dramatic enough that we no longer think of the resulting systems as neural networks. But they'd still be doing deep learning.
+```
+
+##### NN's leading to AI?
+
+[Conway's Law](http://en.wikipedia.org/wiki/Conway%27s_law)
+```
+Any organization that designs a system... will inevitably produce a design whose structure is a copy of the organization's communication structure.
+```
+- only those parts explicitly concerned with design and engineering
+- like in medicine - as our knowledge grew, people were forced to specialize
+- fields in sciecne start out with a few deep ideas - early experts can master them all but then we get deeper and there are too mayn for any one person to really master
+	- so the field divides around those ideas
+	- structure of our knowledge shapes the social organization of science but this shape constrains what we can discover (scientific version of Conway's law)
+- Author says deep learning hasn't yet developed all it's subfields
+
+
+In academic work, please cite this book as: Michael A. Nielsen, "Neural Networks and Deep Learning", Determination Press, 2015  
