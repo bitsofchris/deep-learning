@@ -37,7 +37,7 @@ print("Test images shape:", test_images.shape)
 print("Test labels shape:", test_labels.shape)
 
 # Save the preprocessed data to .npy files
-np.save("code/nn-mnist-image-classification/data/train_images.npy", train_images)
-np.save("code/nn-mnist-image-classification/data/train_labels.npy", train_labels)
-np.save("code/nn-mnist-image-classification/data/test_images.npy", test_images)
-np.save("code/nn-mnist-image-classification/data/test_labels.npy", test_labels)
+np.save("train_images.npy", train_images)
+np.save("train_labels.npy", train_labels)
+np.save("test_images.npy", test_images)
+np.save("test_labels.npy", test_labels)
