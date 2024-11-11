@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
@@ -66,14 +67,16 @@ class ConvolutionalNeuralNetwork(nn.Module):
             nn.Softmax(dim=1) # applies softmax function to the output neurons
         )
 
-    def forward(self, x):
-        for layer in self.conv_stack:
-            x = layer(x)
-            print(f"{layer.__class__.__name__} output shape: {x.shape}")
-        return x
-        # logits = self.conv_stack(x)
-        # return logits
-
 
 model = ConvolutionalNeuralNetwork().to(device)
 print(model)
+
+
+# Define the loss function and optimizer
+criterion = nn.CrossEntropyLoss()  
+optimizer = optim.SGD(model.parameters(), lr=0.03)
+
+
+# Train
+
+# Evaluate
