@@ -65,7 +65,7 @@ class ConvolutionalNeuralNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(in_features=100, out_features=10),
         )
-        self.softmax = nn.Softmax(dim=1)
+        self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
         x = self.conv_stack(x)
@@ -77,7 +77,8 @@ model = ConvolutionalNeuralNetwork().to(device)
 
 
 # Define the loss function and optimizer
-criterion = nn.CrossEntropyLoss()  
+criterion = nn.NLLLoss() # Negative Log Likelihood Loss
+# weight_decay is our regularization term (penalizes large weights)
 optimizer = optim.SGD(model.parameters(), lr=0.03)
 
 
