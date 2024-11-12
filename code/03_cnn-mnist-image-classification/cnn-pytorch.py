@@ -61,8 +61,10 @@ class ConvolutionalNeuralNetwork(nn.Module):
             # input to the fully connected layer is the flattened tensor of size 40 * 4 * 4
             nn.Linear(in_features=40 * 4 * 4, out_features=100),  # 64 * 12 * 12 input neurons
             nn.ReLU(),
+            nn.Dropout(p=0.5),  # Dropout layer, randomly zeroes some of the elements of the input tensor with probability p
             nn.Linear(in_features=100, out_features=100),
             nn.ReLU(),
+            nn.Dropout(p=0.5),
             nn.Linear(in_features=100, out_features=10),
         )
         self.softmax = nn.LogSoftmax(dim=1)
@@ -79,7 +81,7 @@ model = ConvolutionalNeuralNetwork().to(device)
 # Define the loss function and optimizer
 criterion = nn.NLLLoss() # Negative Log Likelihood Loss
 # weight_decay is our regularization term (penalizes large weights)
-optimizer = optim.SGD(model.parameters(), lr=0.03)
+optimizer = optim.SGD(model.parameters(), lr=0.03, weight_decay=0.0001)
 
 
 # Train
