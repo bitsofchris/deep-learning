@@ -16,7 +16,7 @@ Define your layers in `__init__()`.
 ##### Forward()
 Defines how the data flows through the Network. Automatically called when you call `model(data)`. Never call it directly.
 
-But `nn.Sequential()` is an ordered container for layers in our network. You do not need `forward()` when you have `nn.Sequential()`. You should define a `forward()` when you have more advanced data flow like branching or skip connections.
+Using `nn.Sequential()` as an ordered container for layers in our network. You still need a `forward()` when you have `nn.Sequential()`. The definition can be simple.
 
 The `backward()` is implemented automatically as part of autograd.
 

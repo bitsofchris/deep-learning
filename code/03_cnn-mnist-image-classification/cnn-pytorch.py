@@ -64,12 +64,16 @@ class ConvolutionalNeuralNetwork(nn.Module):
             nn.Linear(in_features=100, out_features=100),
             nn.ReLU(),
             nn.Linear(in_features=100, out_features=10),
-            nn.Softmax(dim=1) # applies softmax function to the output neurons
         )
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self, x):
+        x = self.conv_stack(x)
+        x = self.softmax(x) # apply softmax to the output of the network
+        return x
 
 
 model = ConvolutionalNeuralNetwork().to(device)
-print(model)
 
 
 # Define the loss function and optimizer
@@ -78,5 +82,67 @@ optimizer = optim.SGD(model.parameters(), lr=0.03)
 
 
 # Train
+# Train Loop in general
+# forward pass to compute the output
+# compute the loss
+# backward pass to compute the gradients
+# update the weights
+# Define the training function
+def train(dataloader, model, criterion, optimizer, device):
+    model.train() # Set Pytorch to training mode
+    running_loss = 0.0
+    for i, (inputs, labels) in enumerate(dataloader):
+        inputs, labels = inputs.to(device), labels.to(device)
+
+        # Zero the parameter gradients
+        optimizer.zero_grad()
+
+        # Forward pass
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+
+        # Backward pass and optimize
+        loss.backward()
+        optimizer.step()
+
+        running_loss += loss.item()
+        if i % 100 == 99:  # Print every 100 mini-batches
+            print(f"Train loss: {running_loss / 100:.3f}")
+            running_loss = 0.0
+
 
 # Evaluate
+# forward pass to compute the output
+# compute the loss? Why?
+# compute the accuracy
+# Define the evaluation function
+def evaluate(dataloader, model, criterion, device):
+    model.eval()
+    running_loss = 0.0
+    correct = 0
+    total = 0
+    with torch.no_grad(): # Disable gradient calculation
+        for inputs, labels in dataloader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            running_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    print(f"Validation loss: {running_loss / len(dataloader):.3f}")
+    print(f"Accuracy: {100 * correct / total:.2f}%")
+
+
+
+# Training loop
+num_epochs = 10
+for epoch in range(num_epochs):
+    print(f"Epoch {epoch + 1}/{num_epochs}")
+    train(train_dataloader, model, criterion, optimizer, device)
+    evaluate(test_dataloader, model, criterion, device)
+
+print("Finished Training")
+
+# Save the model
+# torch.save(model.state_dict(), "cnn_mnist.pth")
