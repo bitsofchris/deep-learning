@@ -593,3 +593,11 @@ Any organization that designs a system... will inevitably produce a design whose
 
 
 In academic work, please cite this book as: Michael A. Nielsen, "Neural Networks and Deep Learning", Determination Press, 2015  
+
+
+# Appendix - simple algorithm for intelligence
+- other fields show that simple rules do exist to describe what appears to be complicated
+- our dna specifies broad architecture and principles - not every neural connection
+- ferret study - suggests common principles in how different parts of the brain learn to respond to sensory data
+- society of mind theory - human intllegiernce is many different but simple processes ("agents")
+	- Minsky - our intelligence is from our brains vast diversity
