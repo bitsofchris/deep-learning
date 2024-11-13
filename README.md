@@ -9,7 +9,7 @@ If you'd like to learn more about me or follow my work head to [bitsofchris.com]
 
 # Project Milestones
 
-## Simple Neural Network (In-Progress)
+## [DONE]Simple Neural Network
 Goal: Implement a basic neural network from scratch to understand these foundational concepts.
 
 Deliverable:
@@ -18,15 +18,22 @@ Deliverable:
 - [DONE](code/02_stock-intraday-classification/nn.py) A network that predicts if next stock time step is up or down
 - [DONE](code/01_nn-mnist-image-classification/nn-advanced.py) Implementing advanced techniques from [chapter 3](http://neuralnetworksanddeeplearning.com/chap3.html) from scratch on one of my networks
 - [DONE] Finishing the book
-- [In-Progress] implementing a convolutional neural network.
+- [DONE](code/03_cnn-mnist-image-classification/cnn-pytorch.py) implementing a convolutional neural network.
 
-## A basic Transformer Model
+## [In-Progress]A basic Transformer Model
 Goal: Implement the Transformer architecture to understand attention mechanisms.
 
 
 Deliverable:
-- I have Sebastian Raschka's book How to Code a LLM from Scratch to use here
-- Not sure yet, but I'd like to try and tokenize candlesticks from price charts as my "language"
+- I have Sebastian Raschka's book How to Code a LLM from Scratch to use here. Finish this book, code the examples/ exercises from it.
+- Execute 1-2 side projects that arre more possible now.
+
+Side Projects:
+- AI Clone from my Second Brain
+- Shona LLM
+- Candlestick LLM
+
+
 
 ## A time series Transformer Model on a dataset I create
 Goal: Thinking back to my day trading days, create a good dataset that can allow a Transformer to search for similar patterns in history and offer probabilities of a next move.
@@ -38,6 +45,17 @@ Deliverable:
 This will likely evolve as I work and understand what's possible. 
 
 I strongly believe that how you represent the problem in the data is the most important piece in making a useful model. I'm biased because I was a trader first, then data engineer who is only now trying to catch up on the modeling side, but I still belive the data is most important.
+
+
+# Side Project Ideas
+To attempt in between learning milestones.
+
+- Data Pruning - start with MNIST, can we train am effective model on half the data?
+- Shona LLM - fine tuning LLMs on low resource languages like my wife's home language Shona
+- Candlestick LLM - can we tokenize candlesticks and give a LLM the language of price charts to find historical patterns. AI is better for distillation than generation IMO.
+- Temperate Forecasting - time series model to predict temperature. Apple Weather's temperature forecasts are awful on Long Island, can I do better?
+- AI Clone / Second Brain LLM - I have a huge second brain, can I fine tune + RAG on it to create an AI clone of myself?
+
 
 # What is this Repo?
 

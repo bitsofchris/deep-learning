@@ -4,3 +4,4 @@
 - http://neuralnetworksanddeeplearning.com/ - free book
 - zero to hero: karpathy: https://youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ&si=BaoPMzni6BY7XqQR
 
+- LLMs from Scratch: https://github.com/rasbt/LLMs-from-scratch
