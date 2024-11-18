@@ -46,4 +46,55 @@ Encoder/Decoder adapted to different tasks
 	- focused on decoder and generation of text
 
 
-### Utilizing large datasets
+### A Closer Look at GPT architecture
+- next work prediction is a form of self-supervised learning - "create labels on the fly" using the structure of the data (ie. next word in a sentence)
+- GPT is just decoders (no encoders)
+- Autoregressive - use their previous outputs as inputs
+- emergent capabilities - ability to perform tasks not explicitly trained for
+
+### Summary - Chapter 1
+- LLMs based on Transformers
+	- Transformers - have an attention mechanism that gives LLMs selective access to the whole input sequence
+- Original Transformer uses encoder for parsing text, and decoder for generating text
+- GPT only implements decoder modules, specifically designed for generating text 
+
+# Chapter 2 - Working with Text Data
+
+### Understanding word embeddings
+- embeddings are data converted to a vector format
+	- words translated into numbers so we can do math on it
+	- map discrete objects (words, images, etc) to points in a continuous vector space
+
+
+### Process 
+- Tokenization - breaks text into individual tokens
+	- byte pair encoding - breaks down words not in it's vocabulary into smaller sub-words and even individual characters. can handle out-of-vocabulary words
+	- can create special tokens to handle things like end of text
+- Each unique token is mapped to a unique integer Token Id
+	- have a map to go from token to id and id to token
+- Input-Target pairs are generated - use a context window, a stride length, and slide through the text
+- Creating token embeddings - initialized random weights, create embedding layer in PyTorch
+	- `torch.nn.Embedding(vocab_size, output_dim)`
+- encode positions
+	- relative - distance between other tokens
+	- absolute - at exact position
+		- include an additional embedding layer that is of length context window
+
+### Summary - Chapter 2
+
+##### Pipeline
+ 1. Input Text -> broken into Tokens
+ 2. Tokens -> converted to Token IDs using a vocabulary
+ 3. Token IDs converted to embedding vectors
+ 4. Add positional embeddings
+ 5. Input embeddings = token id convert embeddings + positional embeddings
+ 6. Feed the input embeddings into the GPT decoder
+
+##### Recap
+- embeddings convert discrete data into continuous vectors
+- sliding window on tokenized data to generate input-output pairs for training
+
+
+# Chapter 3 - Coding Attention Mechanisms
+
+
