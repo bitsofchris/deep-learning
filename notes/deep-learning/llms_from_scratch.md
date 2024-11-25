@@ -97,4 +97,37 @@ Encoder/Decoder adapted to different tasks
 
 # Chapter 3 - Coding Attention Mechanisms
 
+Recurrent Neural Networks were the most popular encoder-decoder architecture. Takes output from previous steps to feed as inputs to the current step.
+- encoder updates its hidden state at each step trying to capture the meaning of input
+- decoder then takes this final hidden state to generate
+- this hidden state == an embedding vector
+- dont work well for longer texts
 
+### Self-Attention
+- Each position in the input sequence can consider how relevant all other positions in the same sequence are
+- relates positions within a single input sequence
+
+##### Simple Self-Attention
+- end goal is to have a CONTEXT VECTOR for each input token
+	- this context vector combines information from all other input tokens
+- Context Vector = Attention Weights for each token * input vector of each token
+- The context vector is an enriched embedding vector - it has information about the related tokens baked into it
+
+Computing Self-Attention (aka getting the context vector)
+1. We have our embeddings for each input token
+2. For each input token, one at a time (aka our query token): 
+	1. compute the dot product between that token and every input token
+	2. dot product == a similarity score, how much does the current (query) token relate to the embedding of each input token
+3. the resulting vector (one scalar value per input token) is the attention scores vector for that query token (query just means the token we are computing attention scores for)
+4. normalize (softmax) the attention scores to get the attention weights
+5. context vector = input embedding vector * attention weights 
+	1. Basically: input vector *  normalized attention scores which are just the dot products of a query vector to each token
+
+
+Simpler
+1. Compute attention scores: dot products between every input
+2. Compute attention weights: normalize via softmax
+3. Compute context vectors: attention weighted sum of inputs
+
+
+##### Self-attention with trainable weights

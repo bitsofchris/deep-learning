@@ -50,5 +50,38 @@ Backprop is the algorithm to find the nudges for the entire network given a sing
 
 # chapter 4 - calculus of backprop
 
+Chain rule shows how the nudge in weights, impacts the nudge in z, and how they impacts the activation, which ultimately impacts cost.
+
+So to see how a change in a weight or bias impacts cost, we use chain rule form calculus to compute.
+
+Weights and previous activations impact the current activation which impacts cost. “neurons that fire together wire together”
+
+Backprop basically helps us trace back all the impacts of a weight and bias have on a cost function. Walking backward from output layer
+
+# chapter 5
+
+Embeddings are the input vectors from the data.
+
+Weight parameters are the matrices of tunable weights at various layers.
+
+Dot product- element wise multiplication that is summed, results in single scalar value. Measure of similarity.
+
+Weighted sums - matrix x vector
+
+Transformers with attention take the token embedding vector and add to it more information - like its position and context of surrounding words.
+
+Context size limits how much context is used with attention mechanisms.
+
+Last step - of transformer take the vector and use a matrix from the vocabulary to predict next token.
+
+Use only last vector because the others are used in training? 
+Last vector x the unembedding matrix to get the softmax probabilities of next token.
+
+Foundation of attention
+Embedding start, unembedding the end.
+Matrix multiplication and dot products for similarity.
+Softmax normalizes the vector to be a distribution, temperature introduces some flexibility here by softening how close to max distribution the biggest value gets.
+
+Softmax - normalizes output into probability.
 
 
