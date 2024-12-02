@@ -85,3 +85,31 @@ Softmax normalizes the vector to be a distribution, temperature introduces some 
 Softmax - normalizes output into probability.
 
 
+# chapter 6
+Masking - set scores to negative infinity before normalization 
+
+Value weights x each embedding to get a value vector for each token.
+
+This value vector then multiplied by the weight attention for a given token to then give you the vector of that token with context.
+
+So the value vector is basically like what direction this word means contextually - and then attention weight is how much of this contextual direction should we move the token in question, that’s your new embedding.
+
+Key and query produce the attention score or map 
+Then value helps you take that map and update your embedding with context.
+
+One attention head is the K, Q and its V matrix.
+
+Query = Wq * Embedding vector
+For each token 
+Key = Wk * Embedding vector
+Keys are matching queries when closely align
+(Dot product )
+
+Variations on attention mechanisms to make it more scalable 
+
+# chapter 7
+
+“Facts” live in the multi layer perceptron networks between attention blocks.
+
+These networks are where the emergent behavior 
+

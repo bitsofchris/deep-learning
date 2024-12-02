@@ -131,3 +131,28 @@ Simpler
 
 
 ##### Self-attention with trainable weights
+- Scaled dot-product attention
+	- we still want to compute context vectors as weighted sums over the input vectors (token embeddings) for each input element
+- Weight Matrices
+	- Query
+	- Key
+	- Value
+- These matrices are trainable parameters that project the embedded input tokens into these Q, K, V spaces
+	- the matrices are shared only across the current context window for each attention layer and each attention head
+	- meaning there is a set of Q, K, V matrices for each context window, for each attention head, in each attention layer
+- Query and Key vectors - we use dot product to compute attention scores
+	- dot product is a measure of similarity, how much do the two vectors point in the same direction
+	- We take the query of 1 token and multiple by it by the key of every token to get a vector of attention scores
+- Attention scores are then scaled with softmax to become attention weights
+- Context vector for a token = weighted sum of attention weights with each tokens value vector
+	- basically attention weight says how much of this tokens value vector do I want to use in the new context vector 
+- Query - think search term or "current" word/token
+- Key - used for indexing to match the query
+- Value - the actual content
+
+##### Self-Attention TLDR
+Take input vectors of the token embedding -> use the Wquery, Wkey matrices to compute the attention weights. Then use those weights and the Wvalue to update the input embeddings with context (creates the context vectors for each token).
+
+
+### Hiding Future Words with causal attention
+ left off 3.5
