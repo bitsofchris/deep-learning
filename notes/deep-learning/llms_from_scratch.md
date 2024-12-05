@@ -155,4 +155,28 @@ Take input vectors of the token embedding -> use the Wquery, Wkey matrices to co
 
 
 ### Hiding Future Words with causal attention
- left off 3.5
+
+Mask future words in a sequence so not looking ahead.
+
+1. Mask the unnormalizd attention scores aobve the diagonal (future words) with negative infinity.
+	1. `torch.triu()`
+2. Then normalize with softmax.
+3. Optionally apply dropout after computing the attention weights 
+	1. `torch.nn.dropout(% to drop)`
+	2. non-dropped weights get scaled according to `1/% to drop`
+
+`register_buffer()` is used to store the mask in the model's state_dict, it is not a trainable parameter but allows it to follow the model around
+
+using `_` after a pytorch function has it operate in-place
+
+### Extending Single-head to Multi-head attention
+
+- To this point, we have done single-head attention.
+- If we stack muliple single head attention blocks we can have multi-head attention.
+	- just concat the context vector matrices
+- Running multiple attention heads in parallel allows the model to attend to different information 
+##### Optimization
+- while you can just stack single attention heads and concatenate the context vectors, it's more computationally efficent to have single QKV matrices and split them for each attention head
+- To do this we need to use a `head_dim` size which is the `output_dimensions / number of attention heads`. 
+	- We then take this `head_dim` and use `view()` to reslice the Tensors so we can split the tensors into another dimension, one for each attention head
+	- We have to be sure to transpose the QKV matrices after the spliut so that it goes `batch, heads, tokens, dimensionality of each token in each head`. This order in the tensor allows us to operate on each head separately.
