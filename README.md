@@ -25,8 +25,8 @@ Goal: Implement the Transformer architecture to understand attention mechanisms.
 
 
 Deliverable:
-- I have Sebastian Raschka's book How to Code a LLM from Scratch to use here. Finish this book, code the examples/ exercises from it.
-- Execute 1-2 side projects that arre more possible now.
+- [In-Progress] I have Sebastian Raschka's book How to Code a LLM from Scratch to use here. Finish this book, code the examples/ exercises from it.
+- Execute 1-2 side projects that are more possible now.
 
 Side Projects:
 - AI Clone from my Second Brain
