@@ -23,7 +23,7 @@ A comprehensive guide to understanding and learning AI at different levels. This
 - [Level 5: Mechanisms](#level-5-mechanisms)
 - [Level 6: Math](#level-6-math)
 
-## Level 1: Applications
+## 🛠️ Level 1: Applications
 ### Basic Understanding
 - Basic prompt engineering
 - Basic limitations (e.g., context window, hallucinations)
@@ -47,7 +47,7 @@ A comprehensive guide to understanding and learning AI at different levels. This
 - Custom Workflows via Custom GPTs, Gems, etc.
 - If your optimizing and customizing workflows with AI tools
 
-## Level 2: Models
+## 🧩 Level 2: Models
 ### Basic Understanding
 - Nuances of different models and their strengths (e.g., GPT4o vs o1)
 - Model selection for your use case (i.e, thinking vs breadth vs speed)
@@ -69,7 +69,7 @@ A comprehensive guide to understanding and learning AI at different levels. This
 - Application developers
 - If your building products with AI
 
-## Level 3: Architecture
+## 📐 Level 3: Architecture
 ### Basic Understanding
 - High-level understanding of common architectures (Transformers, CNN, RNN)
 - High-level understanding of neural networks
@@ -94,7 +94,7 @@ A comprehensive guide to understanding and learning AI at different levels. This
 - Engineers scaling AI applications
 - If your fine-tuning models for custom use cases
 
-## Level 4: Components
+## ⚙️ Level 4: Components
 ### Basic Understanding
 - Neural Networks in depth (feed forward networks)
 - Transformer Blocks
@@ -116,7 +116,7 @@ A comprehensive guide to understanding and learning AI at different levels. This
 - Advanced AI Engineers
 - If you're building custom models, deploying fine-tuned models at scale
 
-## Level 5: Mechanisms
+## 🔬 Level 5: Mechanisms
 
 *This level is really just going deeper, into the implementation details of Components. I'm still on my learning journey and I don't have much to offer yet here.
 This level also feels like where you go directly to the research, reading papers and trying to re-create on your own.*
@@ -139,7 +139,7 @@ This level also feels like where you go directly to the research, reading papers
 - Advanced ML Engineers
 - If you're building foundation models, experimenting with cutting edge architectures
 
-## Level 6: Math
+## 📊 Level 6: Math
 ### Basic Understanding
 - Vectors
 - Matrix Multiplication
