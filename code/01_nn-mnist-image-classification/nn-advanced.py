@@ -30,14 +30,16 @@ class Network:
         self._default_weight_initializer()
         self.cost = cost
 
-
     def _default_weight_initializer(self):
         """
         Initialize weights using a Gaussian distribution with mean 0 and standard deviation 1.
         """
         # dont need biases for input layer
         self.biases = [np.random.randn(y, 1) for y in self.sizes[1:]]
-        self.weights = [np.random.randn(y, x)/np.sqrt(x) for x, y in zip(self.sizes[:-1], self.sizes[1:])]
+        self.weights = [
+            np.random.randn(y, x) / np.sqrt(x)
+            for x, y in zip(self.sizes[:-1], self.sizes[1:])
+        ]
 
     def _large_weight_initializer(self):
         """
@@ -45,7 +47,9 @@ class Network:
         This one can lead to slower learning.
         """
         self.biases = [np.random.randn(y, 1) for y in self.sizes[1:]]
-        self.weights = [np.random.randn(y, x) for x, y in zip(self.sizes[:-1], self.sizes[1:])]
+        self.weights = [
+            np.random.randn(y, x) for x, y in zip(self.sizes[:-1], self.sizes[1:])
+        ]
 
     def _sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
@@ -82,7 +86,8 @@ class Network:
         # Update weights and biases with the average gradient for the mini batch
         # Regularization term is added to the weights (1-eta * (lmbda/n)) * <previous weight update>
         self.weights = [
-            (1-eta * (lmbda/n)) * current_weights - (eta / len(mini_batch)) * nabla_w
+            (1 - eta * (lmbda / n)) * current_weights
+            - (eta / len(mini_batch)) * nabla_w
             for current_weights, nabla_w in zip(self.weights, nabla_w)
         ]
         self.biases = [
@@ -158,7 +163,9 @@ class Network:
             ]
             # Update weights and biases for each mini batch
             for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, learning_rate, lmbda, len(training_data))
+                self.update_mini_batch(
+                    mini_batch, learning_rate, lmbda, len(training_data)
+                )
             if test_data and epoch % eval_interval == 0:
                 print(f"Epoch {epoch}: {self.evaluate(test_data)} / {n_test}")
 
@@ -175,8 +182,12 @@ class Network:
         train_labels = np.load(
             "code/01_nn-mnist-image-classification/data/train_labels.npy"
         )
-        test_images = np.load("code/01_nn-mnist-image-classification/data/test_images.npy")
-        test_labels = np.load("code/01_nn-mnist-image-classification/data/test_labels.npy")
+        test_images = np.load(
+            "code/01_nn-mnist-image-classification/data/test_images.npy"
+        )
+        test_labels = np.load(
+            "code/01_nn-mnist-image-classification/data/test_labels.npy"
+        )
         if max_samples:
             train_images = train_images[:max_samples]
             train_labels = train_labels[:max_samples]

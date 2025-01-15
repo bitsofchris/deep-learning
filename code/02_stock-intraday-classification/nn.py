@@ -9,6 +9,7 @@ import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 
+
 class StockPredictionModel(nn.Module):
     def __init__(self, input_size):
         super().__init__()
@@ -16,24 +17,22 @@ class StockPredictionModel(nn.Module):
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(input_size, 128),
             nn.ReLU(),
-            nn.Dropout(0.2), # randomly zero out some neurons to help training
-            
+            nn.Dropout(0.2),  # randomly zero out some neurons to help training
             nn.Linear(128, 64),
             nn.ReLU(),
             nn.Dropout(0.2),
-            
             nn.Linear(64, 32),
             nn.ReLU(),
             nn.Dropout(0.2),
-            
             nn.Linear(32, 1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, x):
         x = self.flatten(x)
         logits = self.linear_relu_stack(x)
         return logits
+
 
 def _init_argparse():
     parser = argparse.ArgumentParser(description="Process some CSV data.")
@@ -54,8 +53,8 @@ def _init_argparse():
 
 def preprocess_data(df, target_column="Target", test_size=0.15, val_size=0.15):
     # Fix Volume Change Column
-    df['Volume_Change'] = df['Volume_Change'].replace([np.inf, -np.inf], np.nan)
-    df['Volume_Change'] = df['Volume_Change'].fillna(0)
+    df["Volume_Change"] = df["Volume_Change"].replace([np.inf, -np.inf], np.nan)
+    df["Volume_Change"] = df["Volume_Change"].fillna(0)
 
     # TODO - One hot encoded the Close_Position_Category column
     X = df.drop(columns=[target_column, "Ticker", "Date", "Close_Position_Category"])
@@ -90,6 +89,7 @@ def preprocess_data(df, target_column="Target", test_size=0.15, val_size=0.15):
         (X_test_tensor, y_test_tensor),
         scaler,
     )
+
 
 def train(dataloader, model, loss_fn, optimizer, device):
     size = len(dataloader.dataset)
@@ -131,7 +131,6 @@ def test(dataloader, model, loss_fn, device):
     )
 
 
-
 def run(file_path, learning_rate=0.001, epochs=50):
     # Load & Pre-Process Data
     df = pd.read_csv(file_path)
@@ -170,7 +169,6 @@ def run(file_path, learning_rate=0.001, epochs=50):
         print(f"Epoch {t+1}\n-------------------------------")
         train(train_loader, model, loss_fn, optimizer, device)
         test(test_loader, model, loss_fn, device)
-
 
 
 if __name__ == "__main__":

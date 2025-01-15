@@ -44,9 +44,13 @@ class ConvolutionalNeuralNetwork(nn.Module):
             # grayscale = 1, RGB = 3. Our data using 1
             # number of feature maps = out_channels
             # kernel_size is the size of the local receptive field as a  square (5x5)
-            nn.Conv2d(in_channels=1, out_channels=20, kernel_size=5),  # 1 input channel, 32 output channels
-            nn.ReLU(), # applies Rectified Linear Unit activation function to output of convlutional layer
-            nn.MaxPool2d(kernel_size=2),  # Max pooling layer, downsamples the feature maps reducing their size
+            nn.Conv2d(
+                in_channels=1, out_channels=20, kernel_size=5
+            ),  # 1 input channel, 32 output channels
+            nn.ReLU(),  # applies Rectified Linear Unit activation function to output of convlutional layer
+            nn.MaxPool2d(
+                kernel_size=2
+            ),  # Max pooling layer, downsamples the feature maps reducing their size
             nn.Conv2d(in_channels=20, out_channels=40, kernel_size=5),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),  # Max pooling layer
@@ -59,9 +63,13 @@ class ConvolutionalNeuralNetwork(nn.Module):
             # the 12x12 feature map becomes a 8x8 feature map after the second convolutional layer because of the 5x5 window
             # the 8x8 feature map becomes a 4x4 feature map after the second max pooling layer (2x2 window)
             # input to the fully connected layer is the flattened tensor of size 40 * 4 * 4
-            nn.Linear(in_features=40 * 4 * 4, out_features=100),  # 64 * 12 * 12 input neurons
+            nn.Linear(
+                in_features=40 * 4 * 4, out_features=100
+            ),  # 64 * 12 * 12 input neurons
             nn.ReLU(),
-            nn.Dropout(p=0.5),  # Dropout layer, randomly zeroes some of the elements of the input tensor with probability p
+            nn.Dropout(
+                p=0.5
+            ),  # Dropout layer, randomly zeroes some of the elements of the input tensor with probability p
             nn.Linear(in_features=100, out_features=100),
             nn.ReLU(),
             nn.Dropout(p=0.5),
@@ -71,7 +79,7 @@ class ConvolutionalNeuralNetwork(nn.Module):
 
     def forward(self, x):
         x = self.conv_stack(x)
-        x = self.softmax(x) # apply softmax to the output of the network
+        x = self.softmax(x)  # apply softmax to the output of the network
         return x
 
 
@@ -79,7 +87,7 @@ model = ConvolutionalNeuralNetwork().to(device)
 
 
 # Define the loss function and optimizer
-criterion = nn.NLLLoss() # Negative Log Likelihood Loss
+criterion = nn.NLLLoss()  # Negative Log Likelihood Loss
 # weight_decay is our regularization term (penalizes large weights)
 optimizer = optim.SGD(model.parameters(), lr=0.03, weight_decay=0.0001)
 
@@ -92,7 +100,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.03, weight_decay=0.0001)
 # update the weights
 # Define the training function
 def train(dataloader, model, criterion, optimizer, device):
-    model.train() # Set Pytorch to training mode
+    model.train()  # Set Pytorch to training mode
     running_loss = 0.0
     for i, (inputs, labels) in enumerate(dataloader):
         inputs, labels = inputs.to(device), labels.to(device)
@@ -124,7 +132,7 @@ def evaluate(dataloader, model, criterion, device):
     running_loss = 0.0
     correct = 0
     total = 0
-    with torch.no_grad(): # Disable gradient calculation
+    with torch.no_grad():  # Disable gradient calculation
         for inputs, labels in dataloader:
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
@@ -135,7 +143,6 @@ def evaluate(dataloader, model, criterion, device):
             correct += (predicted == labels).sum().item()
     print(f"Validation loss: {running_loss / len(dataloader):.3f}")
     print(f"Accuracy: {100 * correct / total:.2f}%")
-
 
 
 # Training loop
