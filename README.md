@@ -20,18 +20,24 @@ Deliverable:
 - [DONE] Finishing the book
 - [DONE](code/03_cnn-mnist-image-classification/cnn-pytorch.py) implementing a convolutional neural network.
 
-## [In-Progress]A basic Transformer Model
+## [Partial-Done]A basic Transformer Model
 Goal: Implement the Transformer architecture to understand attention mechanisms.
 
 
 Deliverable:
-- [In-Progress] I have Sebastian Raschka's book How to Code a LLM from Scratch to use here. Finish this book, code the examples/ exercises from it.
+- [Partial-Done] I have Sebastian Raschka's book How to Code a LLM from Scratch to use here. Finish this book, code the examples/ exercises from it.
 - Execute 1-2 side projects that are more possible now.
 
 Side Projects:
 - AI Clone from my Second Brain
 - Shona LLM
 - Candlestick LLM
+
+## [In-Progress] Projects
+
+[Data Pruning MNIST](code/05_data-pruning-mnist-image-classification/README.md) - can I get 97% or better accuracy on MNIST with significantly less data?
+
+
 
 
 
