@@ -18,6 +18,14 @@ Train on the full 60,000 MNIST training images, test on the standard 10,000 imag
 
 Final test accuracy expected ~98–99%.
 
+# Results
+Baseline, full dataset: 99%
+
+Pruning
+Keep Random 50%: 98.93%
+Keep Random 10%: 97.20%
+Keep Random 1% : 90.69%
+
 
 
 # Resources

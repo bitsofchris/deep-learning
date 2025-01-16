@@ -19,7 +19,11 @@ print(f"Using {device} device")
 
 # Load & Normalize Data
 train_loader, test_loader = get_data_loaders(
-    pruning_method="none", batch_size=batch_size
+    # batch_size=batch_size, pruning_method="random",
+    # pruning_kwargs={"percentage": 0.01}
+    batch_size=batch_size,
+    pruning_method="cluster",
+    pruning_kwargs={"k": 10000},
 )
 
 

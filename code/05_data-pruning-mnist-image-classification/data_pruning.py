@@ -1,4 +1,58 @@
 import numpy as np
+from sklearn.cluster import KMeans
+
+
+def _cluster_prune_indices(train_dataset, k=10000, random_state=42):
+    """
+    Clusters the raw pixel data of MNIST into k clusters
+    and picks the single sample closest to each cluster's centroid.
+
+    Args:
+        train_dataset: A torchvision MNIST dataset object (with .data, .targets).
+        k: Number of clusters to form. For large k, you'll keep more samples.
+        random_state: For reproducible clustering.
+
+    Returns:
+        pruned_indices: A list of training-set indices,
+                        one representative per cluster
+                        (k or fewer if some clusters are empty).
+    """
+
+    # 1) Extract raw pixel data from dataset [N, 28, 28] -> flatten to [N, 784]
+    X = train_dataset.data  # shape (60000, 28, 28) by default
+    X_flat = X.float().view(-1, 784).numpy()  # shape (60000, 784)
+
+    # 2) Run k-means on the flattened pixel vectors
+    print(f"Running k-means on {len(X_flat)} samples with k={k} ...")
+    kmeans = KMeans(n_clusters=k, random_state=random_state).fit(X_flat)
+    labels = kmeans.labels_  # cluster assignment for each sample [N]
+    centroids = kmeans.cluster_centers_  # shape (k, 784)
+
+    # 3) For each cluster, pick the sample closest to that centroid
+    pruned_indices = []
+    for cluster_id in range(k):
+        # Grab all sample indices that belong to cluster_id
+        cluster_indices = np.where(labels == cluster_id)[0]
+        if len(cluster_indices) == 0:
+            # This cluster got no samples (can happen if k is large)
+            continue
+
+        # Subset the flattened data for this cluster
+        subX = X_flat[cluster_indices]  # shape (num_in_cluster, 784)
+        center = centroids[cluster_id]  # shape (784,)
+
+        # Compute squared distances from each sample to the centroid
+        distances = np.sum((subX - center) ** 2, axis=1)  # shape (num_in_cluster,)
+
+        # Find the sample with the minimum distance
+        min_idx_local = np.argmin(distances)
+        min_idx_global = cluster_indices[min_idx_local]
+
+        # Keep that global index
+        pruned_indices.append(min_idx_global)
+
+    print(f"Found {len(pruned_indices)} representative samples for {k} clusters.")
+    return pruned_indices
 
 
 def prune_indices(train_dataset, method="none", **kwargs):
@@ -16,37 +70,20 @@ def prune_indices(train_dataset, method="none", **kwargs):
         # Keep all indices
         return list(range(len(train_dataset)))
 
-    elif method == "duplicates":
-        # Example (naive) duplicates approach:
-        # 1. Convert each image to a flattened vector (in memory) to check duplicates
-        # 2. This might be expensive for big datasets, but MNIST is small enough.
-
-        all_data = train_dataset.data  # shape [60000, 28, 28]
-        # Flatten into [60000, 784]
-        all_data_flat = all_data.view(len(train_dataset), -1).numpy()
-
-        # Use a set or a dictionary to track unique rows
-        # For example, we can use numpy's unique or just a dict
-        _, unique_indices = np.unique(all_data_flat, axis=0, return_index=True)
-
-        # Sort so the subset is in ascending index
-        pruned_indices = sorted(unique_indices.tolist())
-        return pruned_indices
+    elif method == "random":
+        # Take a random percentage of the indices
+        percentage = kwargs.get("percentage", 0.5)  # default to 50%
+        print(f"Using pruning method: random, with {percentage*100}% of data.")
+        num_indices = len(train_dataset)
+        num_indices_to_keep = int(num_indices * percentage)
+        pruned_indices = np.random.choice(
+            num_indices, num_indices_to_keep, replace=False
+        )
+        return pruned_indices.tolist()
 
     elif method == "cluster":
-        # Example cluster approach with k-means (placeholder):
-        # We'll cluster the flattened images, then pick 1 or more reps per cluster.
-
-        all_data = train_dataset.data  # [N, 28, 28]
-        # Flatten
-        all_data_flat = all_data.view(len(train_dataset), -1).float()  # [N, 784]
-
-        k = kwargs.get("k", 5000)  # number of cluster centroids you want
-        # ... run k-means on all_data_flat ...
-        # ... pick representative indices for each cluster ...
-
-        # For demonstration, let's just pick the first k
-        pruned_indices = list(range(min(k, len(all_data_flat))))
+        k = kwargs.get("k", 10000)
+        pruned_indices = _cluster_prune_indices(train_dataset, k=k, random_state=37)
         return pruned_indices
 
     else:

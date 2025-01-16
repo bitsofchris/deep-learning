@@ -48,11 +48,15 @@ def _load_raw_mnist(download_path="./data"):
     return train_dataset, test_dataset
 
 
-def get_data_loaders(pruning_method="none", batch_size=64):
+def get_data_loaders(batch_size=64, pruning_method="none", pruning_kwargs={}):
     train_dataset, test_dataset = _load_raw_mnist()
-    indices_to_keep = data_pruning.prune_indices(train_dataset, method=pruning_method)
+    indices_to_keep = data_pruning.prune_indices(
+        train_dataset, method=pruning_method, **pruning_kwargs
+    )
     train_loader = _create_subset_dataloader(
         train_dataset, indices_to_keep, batch_size=batch_size
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    print(f"Train dataset size: {len(train_loader.dataset)}")
+    print(f"Test dataset size: {len(test_loader.dataset)}")
     return train_loader, test_loader
