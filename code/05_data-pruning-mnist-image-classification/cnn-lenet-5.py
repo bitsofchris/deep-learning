@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from original_data_loader import load_data
+from data_utils import get_data_loaders
 
 # Hyperparams
 batch_size = 64
@@ -18,7 +18,9 @@ print(f"Using {device} device")
 
 
 # Load & Normalize Data
-train_loader, test_loader = load_data(batch_size)
+train_loader, test_loader = get_data_loaders(
+    pruning_method="none", batch_size=batch_size
+)
 
 
 # Define CNN
