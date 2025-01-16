@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from torchvision import datasets, transforms
+
+from original_data_loader import load_data
 
 # Hyperparams
 batch_size = 64
@@ -15,38 +16,9 @@ device = (
 )
 print(f"Using {device} device")
 
-# Load & Normalize Data
-train_dataset = datasets.MNIST(
-    root="./data",
-    train=True,
-    transform=transforms.Compose(
-        [
-            transforms.Resize((32, 32)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=(0.1307,), std=(0.3081,)),
-        ]
-    ),
-    download=True,
-)
-test_dataset = datasets.MNIST(
-    root="./data",
-    train=False,
-    transform=transforms.Compose(
-        [
-            transforms.Resize((32, 32)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=(0.1325,), std=(0.3105,)),
-        ]
-    ),
-    download=True,
-)
 
-train_loader = torch.utils.data.DataLoader(
-    dataset=train_dataset, batch_size=batch_size, shuffle=True
-)
-test_loader = torch.utils.data.DataLoader(
-    dataset=test_dataset, batch_size=batch_size, shuffle=True
-)
+# Load & Normalize Data
+train_loader, test_loader = load_data(batch_size)
 
 
 # Define CNN
