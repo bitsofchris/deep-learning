@@ -26,6 +26,14 @@ Keep Random 50%: 98.93%
 Keep Random 10%: 97.20%
 Keep Random 1% : 90.69%
 
+Clustering
+k=10000 (16.7% of data): 98.04%
+k=5000  ( 8.3% of data): 97.55%
+k=1000  ( 1.7% of data): 93.03%
+k=600   (   1% of data): 93.57%
+
+### With my Test harness now, initial results:
+
 
 
 # Resources
