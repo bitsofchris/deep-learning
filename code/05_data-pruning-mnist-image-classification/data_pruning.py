@@ -1,8 +1,8 @@
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 
 
-def _cluster_prune_indices(train_dataset, k=10000, random_state=42):
+def _cluster_prune_indices(train_dataset, k=10000, random_state=37):
     """
     Clusters the raw pixel data of MNIST into k clusters
     and picks the single sample closest to each cluster's centroid.
@@ -22,9 +22,19 @@ def _cluster_prune_indices(train_dataset, k=10000, random_state=42):
     X = train_dataset.data  # shape (60000, 28, 28) by default
     X_flat = X.float().view(-1, 784).numpy()  # shape (60000, 784)
 
+    # Sample a subset of the data
+    # X_sample = X_flat[np.random.choice(X_flat.shape[0], 10000, replace=False)]
+    X_sample = X_flat
+
     # 2) Run k-means on the flattened pixel vectors
-    print(f"Running k-means on {len(X_flat)} samples with k={k} ...")
-    kmeans = KMeans(n_clusters=k, random_state=random_state).fit(X_flat)
+    print(f"Running k-means on {len(X_sample)} samples with k={k} ...")
+    kmeans = MiniBatchKMeans(
+        n_clusters=k,
+        batch_size=1024,
+        max_iter=20,
+        max_no_improvement=5,
+        random_state=random_state,
+    ).fit(X_sample)
     labels = kmeans.labels_  # cluster assignment for each sample [N]
     centroids = kmeans.cluster_centers_  # shape (k, 784)
 
