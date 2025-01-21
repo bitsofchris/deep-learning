@@ -33,7 +33,11 @@ k=1000  ( 1.7% of data): 93.03%
 k=600   (   1% of data): 93.57%
 
 ### With my Test harness now, initial results:
-
+--- FINAL RESULTS ---
+{'method': 'random', 'size': 600, 'best_acc': 89.11, 'best_time': 3.5133628845214844}
+{'method': 'random', 'size': 1200, 'best_acc': 95.02, 'best_time': 4.036647081375122}
+{'method': 'cluster', 'size': 600, 'best_acc': 92.0, 'best_time': 10.385218143463135}
+{'method': 'cluster', 'size': 1200, 'best_acc': 94.26, 'best_time': 17.74043107032776}
 
 
 # Resources
