@@ -1,0 +1,14 @@
+run_id,accuracy,time,pruning_method,dataset_size,selection_strategy,apply_pca,k,n_closest,n_furthest,num_epochs,batch_size,learning_rate,experiment_id
+1,90.51,3.5826339721679688,random,600,,False,1,1,1,5,64,0.001,1
+1,84.29,4.265197038650513,cluster,600,closest,False,50,1,1,5,64,0.001,2
+1,66.87,4.2261717319488525,cluster,600,furthest,False,50,1,1,5,64,0.001,3
+1,90.31,4.701892852783203,cluster,600,random,False,50,1,1,5,64,0.001,4
+1,90.34,8.740841150283813,cluster,3000,closest,False,50,1,1,5,64,0.001,5
+1,96.17,8.110347032546997,cluster,3000,furthest,False,50,1,1,5,64,0.001,6
+1,96.02,8.297011852264404,cluster,3000,random,False,50,1,1,5,64,0.001,7
+1,87.38,3.998765707015991,cluster,600,closest,True,50,1,1,5,64,0.001,8
+1,57.43,3.9993762969970703,cluster,600,furthest,True,50,1,1,5,64,0.001,9
+1,89.52,3.994987964630127,cluster,600,random,True,50,1,1,5,64,0.001,10
+1,91.25,7.790495157241821,cluster,3000,closest,True,50,1,1,5,64,0.001,11
+1,96.14,7.279943227767944,cluster,3000,furthest,True,50,1,1,5,64,0.001,12
+1,97.05,7.202164888381958,cluster,3000,random,True,50,1,1,5,64,0.001,13
