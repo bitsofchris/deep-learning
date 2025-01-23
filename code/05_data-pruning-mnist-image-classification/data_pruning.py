@@ -24,7 +24,7 @@ def _cluster_prune_indices(
         k:             Number of clusters to form in K-means.
         target_size:   Desired final # of samples across entire dataset.
         selection_strategy: "closest", "furthest", "random", or "hybrid" (both).
-        n_closest, n_furthest: For "hybrid", how many from each side of centroid distance.
+        n_closest, n_furthest: For "hybrid", how many from each side of centroid.
         apply_pca:     Whether to run PCA on flattened images first.
         pca_components:# of PCA components if apply_pca=True.
         random_state:  Random seed for reproducibility.
@@ -44,8 +44,6 @@ def _cluster_prune_indices(
         print(f"[INFO] Applying PCA to reduce to {pca_components}D before clustering.")
         pca = PCA(n_components=pca_components, random_state=random_state)
         X_flat = pca.fit_transform(X_flat)  # shape [N, pca_components]
-
-    d = X_flat.shape[1]  # dimension after PCA (or 784 if no PCA)
 
     # 3) Determine how many samples per cluster
     #    - If 'hybrid', we pick (n_closest + n_furthest) from each cluster =>

@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
     for exp_idx, config in enumerate(all_experiments):
         print(
-            f"------------------ Experiment {exp_idx+1}/{len(all_experiments)} ------------------"
+            f"------------- Experiment {exp_idx+1}/{len(all_experiments)} -------------"
         )
         runs_output = train_and_evaluate(**config)
 
