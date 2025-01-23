@@ -1,0 +1,19 @@
+experiments:
+  # 1) RANDOM approach
+  - pruning_method: "random"
+    sizes: [60, 600, 1200, 3000, 6000, 30000]
+    # for random, no 'k' or selection_strategy needed
+
+  # 2) K-MEANS (No PCA)
+  - pruning_method: "cluster"
+    use_pca: false
+    ks: [10, 20, 50, 100, 500, 1000, 2000, 5000, 10000]
+    selection_strategies: ["closest", "furthest", "hybrid", "random"]
+    sizes: [60, 600, 1200, 3000, 6000, 30000]
+
+  # 3) K-MEANS (With PCA)
+  - pruning_method: "cluster"
+    use_pca: true
+    ks: [10, 20, 50, 100, 500, 1000, 2000, 5000, 10000]
+    selection_strategies: ["closest", "furthest", "hybrid", "random"]
+    sizes: [60, 600, 1200, 3000, 6000, 30000]
