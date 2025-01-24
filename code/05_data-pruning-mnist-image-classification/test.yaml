@@ -1,0 +1,6 @@
+experiments:
+  - pruning_method: "cluster"
+    use_pca: true
+    ks: [50]
+    selection_strategies: ["furthest"]
+    sizes: [6000]

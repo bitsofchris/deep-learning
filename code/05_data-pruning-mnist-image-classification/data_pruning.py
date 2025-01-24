@@ -96,6 +96,8 @@ def _cluster_prune_indices(
     rng = np.random.default_rng(random_state)  # for random draws
 
     # 7) For each cluster, pick data
+    closest_indices = []  # 1 per k, for visualization
+    furthest_indices = []  # 1 per k, for visualization
     for cluster_id in range(k):
         cluster_indices = np.where(labels == cluster_id)[0]
         if len(cluster_indices) == 0:
@@ -107,6 +109,8 @@ def _cluster_prune_indices(
         # Distances to centroid
         distances = np.sum((subX - center) ** 2, axis=1)
         sort_idx = np.argsort(distances)  # ascending order => closest first
+        closest_indices.append(cluster_indices[sort_idx[0]])
+        furthest_indices.append(cluster_indices[sort_idx[-1]])
 
         if selection_strategy == "closest":
             # pick the top 'per_cluster' from the front
@@ -147,6 +151,8 @@ def _cluster_prune_indices(
     print(
         f"[INFO] Final pruned set size = {len(pruned_indices)} (target={target_size})."
     )
+    np.save("furthest_indices.npy", furthest_indices)
+    np.save("closest_indices.npy", closest_indices)
     return pruned_indices
 
 
