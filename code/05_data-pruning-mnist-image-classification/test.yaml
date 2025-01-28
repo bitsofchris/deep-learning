@@ -1,6 +1,17 @@
 experiments:
+  # - pruning_method: "none"
+  #   use_pca: true
+  #   ks: [50]
+  #   selection_strategies: ["furthest"]
+  #   sizes: [60000]
+  # - pruning_method: "random"
+  #   use_pca: true
+  #   ks: [50]
+  #   selection_strategies: ["random"]
+  #   sizes: [30000]
   - pruning_method: "cluster"
     use_pca: true
     ks: [50]
     selection_strategies: ["furthest"]
-    sizes: [6000]
+    sizes: [30000]
+

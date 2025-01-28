@@ -49,6 +49,9 @@ def _get_all_experiments(experiment_file):
                             "apply_pca": use_pca,
                         }
                         all_experiments.append(exp)
+        elif method == "none":
+            exp = {"pruning_method": "none", "dataset_size": 60000}
+            all_experiments.append(exp)
     print(f"Total expanded experiments = {len(all_experiments)}")
     return all_experiments
 

@@ -1,0 +1,6 @@
+run_id,accuracy,time,pruning_method,dataset_size,selection_strategy,apply_pca,k,n_closest,n_furthest,num_epochs,batch_size,learning_rate,experiment_id
+1,99.03,99.50495505332947,none,60000,,False,1,1,1,5,64,0.001,1
+2,98.71,101.90240001678467,none,60000,,False,1,1,1,5,64,0.001,1
+3,98.5,103.52354001998901,none,60000,,False,1,1,1,5,64,0.001,1
+4,98.88,92.61926198005676,none,60000,,False,1,1,1,5,64,0.001,1
+5,98.63,94.93516802787781,none,60000,,False,1,1,1,5,64,0.001,1
