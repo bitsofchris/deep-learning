@@ -4,3 +4,4 @@ env
 *.npy
 *data/
 .vscode/
+.DS_Store
