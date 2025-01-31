@@ -1,7 +1,6 @@
 import pytest
 from pathlib import Path
 import tempfile
-import os
 from datetime import datetime
 import time
 from my_obsidian_reader import ObsidianReader
@@ -176,3 +175,72 @@ def test_empty_vault(temp_obsidian_vault):
     docs = reader.load_data()
 
     assert len(docs) == 0, "Empty vault should return empty document list"
+
+
+def test_header_based_splitting(temp_obsidian_vault):
+    """Test that documents are correctly split based on headers."""
+    # Create a test file with multiple headers
+    test_file = temp_obsidian_vault / "headers.md"
+    test_file.write_text(
+        """# Main Header
+This is the main content.
+[[link1]]
+
+## Section 1
+This is section 1 content.
+[[link2]]
+
+### Subsection 1.1
+Subsection content here.
+[[link3]]
+
+## Section 2
+This is section 2 content.
+[[link4]]
+
+# Another Main Header
+Final section content.
+[[link5]]"""
+    )
+
+    reader = ObsidianReader(str(temp_obsidian_vault))
+    docs = reader.load_data()
+
+    # Get documents from our test file
+    header_docs = [doc for doc in docs if doc.metadata["filename"] == "headers.md"]
+
+    # We should have multiple documents due to header splitting
+    assert len(header_docs) > 1, "Document should be split based on headers"
+
+    # Each document should contain its header's wiki links
+    for doc in header_docs:
+        assert (
+            "wiki_links" in doc.metadata
+        ), "Each split document should have wiki links"
+
+    # Verify some expected content splits
+    content_snippets = [doc.text.strip() for doc in header_docs]
+
+    # Find main sections
+    main_sections = [
+        text for text in content_snippets if "This is the main content" in text
+    ]
+    section_ones = [
+        text for text in content_snippets if "This is section 1 content" in text
+    ]
+    section_twos = [
+        text for text in content_snippets if "This is section 2 content" in text
+    ]
+    final_sections = [
+        text for text in content_snippets if "Final section content" in text
+    ]
+
+    assert len(main_sections) > 0, "Should have main header section"
+    assert len(section_ones) > 0, "Should have section 1"
+    assert len(section_twos) > 0, "Should have section 2"
+    assert len(final_sections) > 0, "Should have final section"
+
+    # All split documents should maintain the same file metadata
+    for doc in header_docs:
+        assert doc.metadata["filename"] == "headers.md"
+        assert doc.metadata["folder_name"] == "."
