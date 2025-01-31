@@ -61,6 +61,7 @@ humanfriendly==10.0
 idna==3.10
 importlib_metadata==8.5.0
 importlib_resources==6.5.2
+iniconfig==2.0.0
 ipykernel==6.29.5
 ipython==8.30.0
 ipywidgets==8.1.5
@@ -150,6 +151,7 @@ pexpect==4.9.0
 pillow==11.0.0
 platformdirs==4.3.6
 plotly==5.24.1
+pluggy==1.5.0
 posthog==3.11.0
 prometheus_client==0.21.1
 prompt_toolkit==3.0.48
@@ -168,6 +170,7 @@ pyparsing==3.2.0
 pypdf==5.2.0
 PyPika==0.48.9
 pyproject_hooks==1.2.0
+pytest==8.3.4
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-json-logger==2.0.7
