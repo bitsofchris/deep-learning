@@ -5,3 +5,5 @@ env
 *data/
 .vscode/
 .DS_Store
+*.env
+storage/
