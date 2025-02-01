@@ -25,54 +25,61 @@ def build_notes_map(docs: List[Document]) -> Dict[str, List[Document]]:
 
 
 def get_moc_and_linked_notes(
-    moc_file: str, notes_map: Dict[str, List[Document]]
+    moc_file: str, notes_map: Dict[str, List[Document]], depth: int = 1
 ) -> List[Document]:
     """
     Given a path to a MOC file and a hash map of all notes (keyed by file name),
-    return a combined list of Document objects for the MOC and its linked notes.
+    return a combined list of Document objects for the MOC and its linked notes,
+    crawling N levels deep into the wikilinks.
 
-    The function does the following:
-      1. Finds the documents for the MOC (by matching the file name).
-      2. Collects all wikilinks from those MOC documents.
-      3. For each wikilink (ensuring that it ends with ".md"), looks up the corresponding
-         documents in the notes map.
-      4. Returns the combined list of Document objects.
+    Depth levels:
+      - depth == 0: Only the MOC note.
+      - depth == 1: The MOC note and its directly linked notes.
+      - depth == 2: The MOC note, its directly linked notes, and the notes linked from them.
+      - etc.
 
     Args:
         moc_file: The file path to the MOC note.
-        notes_map: A dictionary mapping file names to Document objects.
+        notes_map: A dictionary mapping file names (e.g., "Note.md") to a list of Document objects.
+        depth: The number of link-hops to follow. Default is 1.
 
     Returns:
-        List of Document objects for the MOC and its linked notes.
+        A list of Document objects for the MOC and its linked notes up to the specified depth.
+
+    Raises:
+        ValueError: If the MOC file is not found in the notes_map.
     """
     # Get the MOC file name (assumed unique in the vault)
     moc_file_name = Path(moc_file).name
     if moc_file_name not in notes_map:
         raise ValueError(f"MOC file {moc_file_name} not found in the notes map")
 
-    # Get the Document objects for the MOC note
-    moc_docs = notes_map[moc_file_name]
-
-    # Collect all unique wikilinks from the MOC's Document(s)
-    linked_note_files = set()
-    for doc in moc_docs:
-        wikilinks = doc.metadata.get("wikilinks", [])
-        for link in wikilinks:
-            # Normalize the link to include the .md extension if missing.
-            if not link.endswith(".md"):
-                link = f"{link}.md"
-            linked_note_files.add(link)
-
-    # Build the final list of Document objects:
-    # Start with the MOC documents and add the documents for each linked note (if found)
+    visited = set()  # To avoid processing a note more than once.
     combined_docs: List[Document] = []
-    combined_docs.extend(moc_docs)
+    frontier = {moc_file_name}  # Start with the MOC note
 
-    for note_file in linked_note_files:
-        if note_file in notes_map:
-            combined_docs.extend(notes_map[note_file])
-        else:
-            print(f"Warning: Linked note '{note_file}' not found in notes map.")
+    # Process up to 'depth' levels.
+    for level in range(depth + 1):
+        next_frontier = set()
+        for note in frontier:
+            if note in visited:
+                continue
+            visited.add(note)
+
+            if note in notes_map:
+                docs = notes_map[note]
+                combined_docs.extend(docs)
+                # For each document from this note, extract wikilinks and add them to the next frontier.
+                for doc in docs:
+                    wikilinks = doc.metadata.get("wikilinks", [])
+                    for link in wikilinks:
+                        # Normalize the link to include the ".md" extension if missing.
+                        if not link.endswith(".md"):
+                            link = f"{link}.md"
+                        next_frontier.add(link)
+            else:
+                print(f"Warning: Linked note '{note}' not found in notes map.")
+        frontier = next_frontier
 
     return combined_docs
 

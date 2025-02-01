@@ -260,3 +260,64 @@ def test_get_moc_and_linked_notes_missing_link(capsys):
     # Capture and check the warning message.
     captured = capsys.readouterr().out
     assert "Warning: Linked note 'NonExistingNote.md' not found" in captured
+
+
+def test_get_moc_and_linked_notes_depth0():
+    """
+    Test that with depth=0, only the MOC note is returned,
+    even if the MOC document contains wikilinks.
+    """
+    # Create a MOC document that links to Note1.
+    moc_doc = create_doc("MOC content", "MOC.md", wikilinks=["Note1"])
+    note1_doc = create_doc("Note1 content", "Note1.md")
+
+    # Build the notes map with both the MOC and Note1.
+    notes_map = {"MOC.md": [moc_doc], "Note1.md": [note1_doc]}
+
+    # With depth=0, we expect only the MOC document.
+    result = get_moc_and_linked_notes("some/path/MOC.md", notes_map, depth=0)
+
+    assert len(result) == 1
+    assert result[0].metadata["file_name"] == "MOC.md"
+
+
+def test_get_moc_and_linked_notes_depth1():
+    """
+    Test that with depth=1, the MOC note and its directly linked note(s) are returned.
+    """
+    # Create a MOC document that links to Note1.
+    moc_doc = create_doc("MOC content", "MOC.md", wikilinks=["Note1"])
+    note1_doc = create_doc("Note1 content", "Note1.md")
+
+    # Build the notes map with both the MOC and Note1.
+    notes_map = {"MOC.md": [moc_doc], "Note1.md": [note1_doc]}
+
+    # With depth=1, expect the MOC document and the Note1 document.
+    result = get_moc_and_linked_notes("any/path/MOC.md", notes_map, depth=1)
+    file_names = {doc.metadata["file_name"] for doc in result}
+
+    assert file_names == {"MOC.md", "Note1.md"}
+    assert len(result) == 2
+
+
+def test_get_moc_and_linked_notes_depth2():
+    """
+    Test that with depth=2, the function returns the MOC note,
+    its directly linked note, and the note linked from that note.
+    """
+    # Create a MOC document that links to Note1.
+    moc_doc = create_doc("MOC content", "MOC.md", wikilinks=["Note1"])
+    # Create Note1 that links to Note2.
+    note1_doc = create_doc("Note1 content", "Note1.md", wikilinks=["Note2"])
+    # Create Note2 with no further links.
+    note2_doc = create_doc("Note2 content", "Note2.md")
+
+    # Build the notes map.
+    notes_map = {"MOC.md": [moc_doc], "Note1.md": [note1_doc], "Note2.md": [note2_doc]}
+
+    # With depth=2, we expect all three notes.
+    result = get_moc_and_linked_notes("any/path/MOC.md", notes_map, depth=2)
+    file_names = {doc.metadata["file_name"] for doc in result}
+
+    assert file_names == {"MOC.md", "Note1.md", "Note2.md"}
+    assert len(result) == 3
