@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import List, Dict
 from llama_index.core.schema import Document
 
+from my_obsidian_reader import ObsidianReader
+
 
 def build_notes_map(docs: List[Document]) -> Dict[str, List[Document]]:
     """
@@ -73,6 +75,10 @@ def get_moc_and_linked_notes(
             print(f"Warning: Linked note '{note_file}' not found in notes map.")
 
     return combined_docs
+
+
+def run():
+    pass
 
 
 # === Example usage ===

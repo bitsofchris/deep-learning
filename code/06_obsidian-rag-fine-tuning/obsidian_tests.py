@@ -3,8 +3,10 @@ import pytest
 from pathlib import Path
 from typing import List
 
-# Adjust this import to where you have defined ObsidianReader.
+from llama_index.core.schema import Document
+
 from my_obsidian_reader import ObsidianReader
+from moc import build_notes_map, get_moc_and_linked_notes
 
 
 # Helper function to create a markdown file in the given directory.
@@ -151,3 +153,110 @@ def test_remove_tasks_from_text(tmp_path: Path):
     # Ensure that non-task text is still present.
     assert "Intro text" in doc.text
     assert "Conclusion text" in doc.text
+
+
+def create_doc(text: str, file_name: str = None, wikilinks=None) -> Document:
+    """
+    Helper to create a Document with given text, file_name, and wikilinks.
+    If wikilinks is not provided, an empty list is used.
+    """
+    if wikilinks is None:
+        wikilinks = []
+    metadata = {}
+    if file_name:
+        metadata["file_name"] = file_name
+    metadata["wikilinks"] = wikilinks
+    return Document(text=text, metadata=metadata)
+
+
+###########################################
+# Tests for build_notes_map
+###########################################
+
+
+def test_build_notes_map_normal():
+    """
+    Test that build_notes_map groups documents by their file name.
+    Two documents with the same file name should be grouped under one key.
+    """
+    # Create three documents: two from "Note1.md" and one from "Note2.md"
+    doc1 = create_doc("Content A", "Note1.md")
+    doc2 = create_doc("Content B", "Note1.md")
+    doc3 = create_doc("Content C", "Note2.md")
+    docs = [doc1, doc2, doc3]
+
+    notes_map = build_notes_map(docs)
+
+    assert "Note1.md" in notes_map
+    assert "Note2.md" in notes_map
+    assert len(notes_map["Note1.md"]) == 2
+    assert len(notes_map["Note2.md"]) == 1
+
+
+def test_build_notes_map_missing_file_name():
+    """
+    Test that documents without a file_name in metadata are ignored in the resulting map.
+    """
+    # Create one document with file_name and one without.
+    doc1 = create_doc("Content A", "Note1.md")
+    doc2 = create_doc("Content B")  # No file_name provided
+    docs = [doc1, doc2]
+
+    notes_map = build_notes_map(docs)
+
+    # Only the document with a file_name should appear.
+    assert "Note1.md" in notes_map
+    assert len(notes_map) == 1
+    assert len(notes_map["Note1.md"]) == 1
+
+
+###########################################
+# Tests for get_moc_and_linked_notes
+###########################################
+
+
+def test_get_moc_and_linked_notes_valid():
+    """
+    Test that given an MOC note with valid wikilinks, the function returns
+    a combined list of documents that includes the MOC and its linked notes.
+    """
+    # Create a MOC document that links to "Note1" and "Note2".
+    moc_doc = create_doc("MOC Content", "MOC.md", wikilinks=["Note1", "Note2"])
+    note1_doc = create_doc("Note1 Content", "Note1.md")
+    note2_doc = create_doc("Note2 Content", "Note2.md")
+
+    # Build the notes map as expected by get_moc_and_linked_notes.
+    notes_map = {"MOC.md": [moc_doc], "Note1.md": [note1_doc], "Note2.md": [note2_doc]}
+
+    # Provide a path to the MOC note (the function uses the basename)
+    combined_docs = get_moc_and_linked_notes("some/path/MOC.md", notes_map)
+
+    # Expect the combined list to contain documents from MOC, Note1, and Note2.
+    file_names = [doc.metadata["file_name"] for doc in combined_docs]
+    assert "MOC.md" in file_names
+    assert "Note1.md" in file_names
+    assert "Note2.md" in file_names
+    assert len(combined_docs) == 3
+
+
+def test_get_moc_and_linked_notes_missing_link(capsys):
+    """
+    Test that if the MOC's wikilinks include a note that does not exist
+    in the notes_map, only the MOC documents are returned and a warning is printed.
+    """
+    # Create a MOC document that links to a non-existent note.
+    moc_doc = create_doc("MOC Content", "MOC.md", wikilinks=["NonExistingNote"])
+    notes_map = {
+        "MOC.md": [moc_doc]
+        # "NonExistingNote.md" is intentionally missing.
+    }
+
+    combined_docs = get_moc_and_linked_notes("MOC.md", notes_map)
+
+    # The returned list should only contain the MOC document.
+    file_names = [doc.metadata["file_name"] for doc in combined_docs]
+    assert file_names == ["MOC.md"]
+
+    # Capture and check the warning message.
+    captured = capsys.readouterr().out
+    assert "Warning: Linked note 'NonExistingNote.md' not found" in captured
