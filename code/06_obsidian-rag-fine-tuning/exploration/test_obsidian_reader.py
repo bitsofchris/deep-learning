@@ -177,6 +177,203 @@ def test_empty_vault(temp_obsidian_vault):
     assert len(docs) == 0, "Empty vault should return empty document list"
 
 
+def test_task_handling(temp_obsidian_vault):
+    """Test different task handling configurations."""
+    # Create a test file with tasks
+    test_file = temp_obsidian_vault / "tasks.md"
+    test_file.write_text(
+        """# Tasks
+Regular content here.
+- [ ] Incomplete task
+- [x] Complete task
+## More Content
+- [ ] Another task
+Regular content again."""
+    )
+
+    # Test with default settings (include tasks)
+    reader = ObsidianReader(str(temp_obsidian_vault))
+    docs = reader.load_data()
+    task_docs = [doc for doc in docs if doc.metadata["filename"] == "tasks.md"]
+
+    # Tasks should be present
+    assert any(
+        "[ ]" in doc.text for doc in task_docs
+    ), "Tasks should be included by default"
+
+    # Test with tasks excluded
+    reader_no_tasks = ObsidianReader(str(temp_obsidian_vault), include_tasks=False)
+    docs_no_tasks = reader_no_tasks.load_data()
+    task_docs_filtered = [
+        doc for doc in docs_no_tasks if doc.metadata["filename"] == "tasks.md"
+    ]
+
+    # Tasks should be removed
+    assert not any(
+        "[ ]" in doc.text for doc in task_docs_filtered
+    ), "Tasks should be excluded"
+    assert not any(
+        "[x]" in doc.text for doc in task_docs_filtered
+    ), "Completed tasks should be excluded"
+
+    # Regular content should remain
+    assert any(
+        "Regular content" in doc.text for doc in task_docs_filtered
+    ), "Non-task content should remain"
+
+
+def test_task_type_metadata(temp_obsidian_vault):
+    """Test task type metadata assignment."""
+    # Create files with and without tasks
+    with_tasks = temp_obsidian_vault / "with_tasks.md"
+    with_tasks.write_text(
+        """# Content With Tasks
+- [ ] Task 1
+- [x] Task 2"""
+    )
+
+    no_tasks = temp_obsidian_vault / "no_tasks.md"
+    no_tasks.write_text(
+        """# Content Without Tasks
+Just regular content here."""
+    )
+
+    # Initialize reader with task type
+    reader = ObsidianReader(str(temp_obsidian_vault), task_type="task_list")
+    docs = reader.load_data()
+
+    # Check documents with tasks
+    task_docs = [doc for doc in docs if doc.metadata["filename"] == "with_tasks.md"]
+    assert all(
+        "type" in doc.metadata for doc in task_docs
+    ), "Documents with tasks should have type metadata"
+    assert all(
+        doc.metadata["type"] == "task_type" for doc in task_docs
+    ), "Task type should match configured value"
+
+    # Check documents without tasks
+    no_task_docs = [doc for doc in docs if doc.metadata["filename"] == "no_tasks.md"]
+    assert all(
+        "type" not in doc.metadata for doc in no_task_docs
+    ), "Documents without tasks should not have type metadata"
+
+
+def test_complex_task_filtering(temp_obsidian_vault):
+    """Test task filtering with complex content and formatting."""
+    test_file = temp_obsidian_vault / "complex_tasks.md"
+    test_file.write_text(
+        """# Complex Tasks
+- [ ] Task with **bold** and *italic*
+- [x] Task with [[wiki link]]
+- [ ] Task with `inline code`
+    - Indented non-task
+    - [ ] Indented task
+- Regular list item
+- [x] Task with > blockquote
+- [ ]Malformed task without space
+-[ ] Another malformed task
+- [ x] Malformed completed task"""
+    )
+
+    # Test with tasks excluded
+    reader = ObsidianReader(str(temp_obsidian_vault), include_tasks=False)
+    docs = reader.load_data()
+    content = next(
+        doc.text for doc in docs if doc.metadata["filename"] == "complex_tasks.md"
+    )
+
+    # Should remove properly formatted tasks only
+    assert "Task with **bold**" not in content
+    assert "Task with [[wiki link]]" not in content
+    assert "Task with `inline code`" not in content
+    assert "Regular list item" in content
+    assert "- [ ]Malformed task without space" in content
+    assert "-[ ] Another malformed task" in content
+
+
+def test_mixed_content_task_handling(temp_obsidian_vault):
+    """Test task handling in documents with mixed content types."""
+    test_file = temp_obsidian_vault / "mixed_content.md"
+    test_file.write_text(
+        """# Mixed Content
+Regular paragraph here.
+
+- [ ] Task 1
+Some content between tasks
+- [x] Task 2
+
+## Subheader
+- [ ] Task in subheader
+> Blockquote with task inside:
+> - [ ] Task in blockquote
+
+```markdown
+- [ ] Task in code block
+```
+
+| Table Header |
+|-------------|
+| - [ ] Task in table |"""
+    )
+
+    # Test with tasks excluded
+    reader = ObsidianReader(str(temp_obsidian_vault), include_tasks=False)
+    docs = reader.load_data()
+
+    content = next(
+        doc.text for doc in docs if doc.metadata["filename"] == "mixed_content.md"
+    )
+
+    # Should keep structure while removing tasks
+    assert "Regular paragraph here." in content
+    assert "Some content between tasks" in content
+    assert "Blockquote with task inside:" in content
+    assert "- [ ] Task 1" not in content
+    assert "- [x] Task 2" not in content
+    # Tasks in code blocks and tables should be preserved
+    assert "- [ ] Task in code block" in content
+    assert "- [ ] Task in table" in content
+
+
+def test_edge_case_task_patterns(temp_obsidian_vault):
+    """Test handling of edge case task patterns."""
+    test_file = temp_obsidian_vault / "edge_cases.md"
+    test_file.write_text(
+        """# Edge Cases
+- [] Not a task (no space)
+- [)] Invalid character
+- [ ] Valid task
+- [x] Valid completed task
+- [X] Valid completed task (capital X)
+-[ ] No space after dash
+-    [ ] Extra spaces after dash
+- [ ]No space after bracket
+- [  ] Extra space in brackets
+- [ x] Space before x
+- [x ] Space after x"""
+    )
+
+    # Test task detection and filtering
+    reader = ObsidianReader(str(temp_obsidian_vault), include_tasks=False)
+    docs = reader.load_data()
+    content = next(
+        doc.text for doc in docs if doc.metadata["filename"] == "edge_cases.md"
+    )
+
+    # These should be removed (valid task syntax)
+    assert "- [ ] Valid task" not in content
+    assert "- [x] Valid completed task" not in content
+    assert "- [X] Valid completed task (capital X)" not in content
+
+    # These should remain (invalid task syntax)
+    assert "- [] Not a task (no space)" in content
+    assert "- [)] Invalid character" in content
+    assert "-[ ] No space after dash" in content
+    assert "-    [ ] Extra spaces after dash" in content
+    assert "- [ ]No space after bracket" in content
+    assert "- [  ] Extra space in brackets" in content
+
+
 def test_header_based_splitting(temp_obsidian_vault):
     """Test that documents are correctly split based on headers."""
     # Create a test file with multiple headers

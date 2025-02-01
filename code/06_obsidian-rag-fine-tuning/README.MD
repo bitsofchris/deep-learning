@@ -1,3 +1,8 @@
+# Start simple - Distill an MOC
+
+Given an MOC note, traverse links and summarize/ distill/ chat with the full context here.
+
+
 # Fine Tuning a LLM on my Second Brain
 
 This is a project I've had in mind for sometime that builds on my [early experiments with RAG](https://bitsofchris.com/p/i-trained-a-local-llm-on-my-obsidian).
