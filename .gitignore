@@ -7,3 +7,4 @@ env
 .DS_Store
 *.env
 storage/
+*.log
