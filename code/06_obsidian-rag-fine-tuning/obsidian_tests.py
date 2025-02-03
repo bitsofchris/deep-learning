@@ -321,3 +321,95 @@ def test_get_moc_and_linked_notes_depth2():
 
     assert file_names == {"MOC.md", "Note1.md", "Note2.md"}
     assert len(result) == 3
+
+
+def get_doc_by_note_name(docs, note_name: str):
+    """
+    Utility function to return the first document with the specified note name.
+    """
+    for doc in docs:
+        if doc.metadata.get("note_name") == note_name:
+            return doc
+    return None
+
+
+def test_single_backlink(tmp_path: Path):
+    """
+    Test a simple case where one note (A.md) links to another (B.md).
+
+    Expected behavior:
+      - Note A should have no backlinks.
+      - Note B should have a backlink from A.
+    """
+    # Create two markdown files:
+    # A.md links to B, while B.md contains no wikilinks.
+    create_markdown_file(tmp_path, "A.md", "This is note A linking to [[B]].")
+    create_markdown_file(tmp_path, "B.md", "This is note B with no links.")
+
+    reader = ObsidianReader(input_dir=str(tmp_path))
+    docs = reader.load_data()
+
+    doc_a = get_doc_by_note_name(docs, "A")
+    doc_b = get_doc_by_note_name(docs, "B")
+
+    # Verify that doc_a exists and has no backlinks.
+    assert doc_a is not None
+    assert doc_a.metadata.get("backlinks") == []
+
+    # Verify that doc_b exists and has a backlink from A.
+    assert doc_b is not None
+    assert doc_b.metadata.get("backlinks") == ["A"]
+
+
+def test_multiple_backlinks(tmp_path: Path):
+    """
+    Test a scenario with multiple notes linking to a single note.
+
+    Create three files:
+      - A.md: links to B and C.
+      - B.md: links to C.
+      - C.md: contains no wikilinks.
+
+    Expected behavior:
+      - Note A should have no backlinks.
+      - Note B should have a backlink from A.
+      - Note C should have backlinks from both A and B.
+    """
+    create_markdown_file(tmp_path, "A.md", "Linking to [[B]] and [[C]].")
+    create_markdown_file(tmp_path, "B.md", "Linking to [[C]].")
+    create_markdown_file(tmp_path, "C.md", "No links here.")
+
+    reader = ObsidianReader(input_dir=str(tmp_path))
+    docs = reader.load_data()
+
+    doc_a = get_doc_by_note_name(docs, "A")
+    doc_b = get_doc_by_note_name(docs, "B")
+    doc_c = get_doc_by_note_name(docs, "C")
+
+    # Verify note A has no backlinks.
+    assert doc_a is not None
+    assert doc_a.metadata.get("backlinks") == []
+
+    # Verify note B has a backlink from A.
+    assert doc_b is not None
+    assert doc_b.metadata.get("backlinks") == ["A"]
+
+    # Note C should have backlinks from A and B.
+    # Since file processing order might vary, we compare as sets.
+    assert doc_c is not None
+    backlinks_c = doc_c.metadata.get("backlinks")
+    assert set(backlinks_c) == {"A", "B"}
+
+
+def test_no_links(tmp_path: Path):
+    """
+    Test that a note with no outgoing links gets an empty backlinks list.
+    """
+    create_markdown_file(tmp_path, "A.md", "This is a note with no links.")
+    reader = ObsidianReader(input_dir=str(tmp_path))
+    docs = reader.load_data()
+
+    doc_a = get_doc_by_note_name(docs, "A")
+    assert doc_a is not None
+    # Since no note links to A, its backlinks should be an empty list.
+    assert doc_a.metadata.get("backlinks") == []
