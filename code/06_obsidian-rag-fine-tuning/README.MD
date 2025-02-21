@@ -1,3 +1,7 @@
+# Check out the Video
+
+[I trained an AI to think like me - here's what happened](https://youtu.be/YAiEM59mpZc?si=M90CYLHypdLnRnsH)
+
 # Start simple - Distill an MOC
 
 Given an MOC note, traverse links and summarize/ distill/ chat with the full context here.

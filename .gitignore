@@ -8,3 +8,6 @@ env
 *.env
 storage/
 *.log
+*lib/
+*.json
+notes_network.html
