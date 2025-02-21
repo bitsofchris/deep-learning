@@ -1,0 +1,12 @@
+# Path to your original Obsidian vault
+vault_path: "/Users/chris/Documents/ZK Home"
+
+# Path where the snapshot copy will be created
+target_dir: "/Users/chris/zk-copy-for-testing"
+
+# List of files and folders to exclude (gitignore-style patterns)
+exclude:
+  - "Backups/*"    # Ignore backup files
+  - "zk_stuff/*"  # Exclude all files inside the 'zk_stuff' folder
+  - "Zk-Work-READ-ONLY/*" # Exclude the 'Zk-Work-READ-ONLY' folder
+  - "Excalidraw/*" # Exclude the 'Excalidraw' folder
