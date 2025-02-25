@@ -39,14 +39,18 @@ exclude:
 ---
 
 ## **📌 Usage**
+
+First copy the folder of your vault somewhere else.
+Your actual vault might have permission issues with Python
+AND it's likely safer to not operate on it directly.
+
 ### **1️⃣ Run from CLI**
 #### **Basic Usage (Use Defaults)**
 
 Uses the `config.yaml` in root location
 
 ```bash
-python vault_snapshot/snapshot 
-```
+python vault_snapshot/snapshot
 
 #### **Specify a Config File**
 ```bash
