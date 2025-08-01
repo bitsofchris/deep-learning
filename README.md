@@ -7,7 +7,11 @@ Like Richard Feynman believed - if you can't explain it simply or create it from
 If you'd like to learn more about me or follow my work head to [bitsofchris.com](https://bitsofchris.com).
 
 
-# Project Milestones
+
+
+# Archived
+
+Below was my initial roadmap when starting his repo, it is out of date at this point. Just look in the code direcotry
 
 ## [DONE]Simple Neural Network
 Goal: Implement a basic neural network from scratch to understand these foundational concepts.
