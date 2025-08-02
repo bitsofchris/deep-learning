@@ -113,7 +113,7 @@ Error is the small change
 ### 4 equations of backprop
 - together they give a way to compute the error at a given layer and the gradient of the cost function
 
-![4 equations of backprop](images/4_equations_of_backprop.png)
+![4 equations of backprop](4_equations_of_backprop.png)
 
 Image taken from the book directly [here](http://neuralnetworksanddeeplearning.com/chap2.html)
 
