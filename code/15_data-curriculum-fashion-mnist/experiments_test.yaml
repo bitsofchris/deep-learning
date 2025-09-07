@@ -1,0 +1,21 @@
+# Quick Test Experiments Configuration
+# Smaller configuration for testing the pipeline
+
+experiments:
+  # Random Baseline (quick test)
+  - ordering_method: "random"
+    runs: 2
+    num_epochs: [5]
+    batch_sizes: [64]
+    learning_rates: [0.001]
+    
+  # Curriculum Learning (quick test)
+  - ordering_method: "curriculum"
+    runs: 2
+    num_epochs: [5]
+    batch_sizes: [64]
+    learning_rates: [0.001]
+    strategies: ["medoid_first"]
+    n_clusters: [20]           # Fewer clusters for speed
+    use_pca: [true]
+    pca_components: [25]       # Fewer components for speed

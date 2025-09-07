@@ -1,0 +1,32 @@
+# Complete Curriculum Learning Experiments
+# Tests random, easy→hard, and hard→easy orderings
+
+experiments:
+  # Random Baseline 
+  - ordering_method: "random"
+    runs: 3
+    num_epochs: [10]
+    batch_sizes: [32]
+    learning_rates: [0.005]
+    
+  # Easy → Hard Curriculum (medoid_first)
+  - ordering_method: "curriculum"
+    runs: 3
+    num_epochs: [10]
+    batch_sizes: [32]
+    learning_rates: [0.005]
+    strategies: ["medoid_first"]
+    n_clusters: [50]
+    use_pca: [true]
+    pca_components: [50]
+    
+  # Hard → Easy Curriculum (inverse)
+  - ordering_method: "curriculum"
+    runs: 3
+    num_epochs: [10]  
+    batch_sizes: [32]
+    learning_rates: [0.005]
+    strategies: ["inverse"]
+    n_clusters: [50]
+    use_pca: [true]
+    pca_components: [50]

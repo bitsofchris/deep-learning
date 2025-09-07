@@ -21,6 +21,11 @@ Each experiment is contained in its own subfolder under `code/`:
 
 ## Common Development Commands
 
+### Activate Virtual env
+Before running any Python.
+
+Activate the virtual environment: /Users/chris/repos/deep-learning/.venv
+
 ### Code Formatting and Linting
 ```bash
 # Format code with black

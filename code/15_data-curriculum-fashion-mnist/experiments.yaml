@@ -1,0 +1,23 @@
+# Curriculum Learning Experiments Configuration
+# This file defines the experiments to run comparing different data ordering strategies
+
+experiments:
+  # Random Baseline Experiments  
+  # - ordering_method: "random"
+  #   runs: 3                    # Number of independent runs for statistical significance
+  #   num_epochs: [10]           # List of epoch counts to test
+  #   batch_sizes: [32]          # List of batch sizes
+  #   learning_rates: [0.005]    # List of learning rates
+    
+  # Curriculum Learning Experiments
+  - ordering_method: "curriculum"
+    runs: 3                 # Number of independent runs
+    num_epochs: [10]           # List of epoch counts to test  
+    batch_sizes: [32]          # List of batch sizes
+    learning_rates: [0.005]    # List of learning rates
+    
+    # Curriculum-specific parameters
+    strategies: ["medoid_first", "quartiles_only"]  # Curriculum ordering strategies
+    n_clusters: [50, 100]      # Number of clusters for analysis
+    use_pca: [true]            # Whether to apply PCA before clustering
+    pca_components: [50]       # Number of PCA components
