@@ -6,6 +6,7 @@ Like Richard Feynman believed - if you can't explain it simply or create it from
 
 If you'd like to learn more about me or follow my work head to [bitsofchris.com](https://bitsofchris.com).
 
+The documentation, blog, and learning notes now live in my public second brain at [brain.bitsofchris.com](https://brain.bitsofchris.com)
 
 
 
