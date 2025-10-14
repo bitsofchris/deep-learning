@@ -1,0 +1,48 @@
+# Batch Size vs Curriculum Learning Interaction Study
+# Tests whether curriculum learning effectiveness depends on batch size
+# Explores batch sizes from 4 to 128 with random vs curriculum ordering
+
+experiments:
+  # Random Baseline across different batch sizes
+  - ordering_method: "random"
+    runs: 1                          # Single run for quick exploration
+    num_epochs: [10]                 # Training epochs
+    batch_sizes: [4, 8, 16, 32, 64, 128]  # 6 different batch sizes
+    learning_rates: [0.005]          # Fixed learning rate
+    
+  # Curriculum Learning across different batch sizes  
+  - ordering_method: "curriculum"
+    runs: 1                          # Single run for quick exploration
+    num_epochs: [10]                 # Training epochs
+    batch_sizes: [4, 8, 16, 32, 64, 128]  # Same 6 batch sizes
+    learning_rates: [0.005]          # Fixed learning rate
+    strategies: ["medoid_first", "quartiles_only", "inverse", "round_robin"]  # All 4 curriculum strategies
+    n_clusters: [50]                 # Number of clusters for analysis
+    use_pca: [true]                  # Apply PCA before clustering
+    pca_components: [50]             # PCA dimensions
+
+# This creates 30 total experiments:
+# - 6 random baseline experiments (one per batch size)  
+# - 24 curriculum experiments (4 strategies × 6 batch sizes)
+
+# Research Questions:
+# 1. Does curriculum learning work better with smaller batch sizes?
+# 2. Is the curriculum "failure" at batch size 32 representative?
+# 3. What's the optimal batch size for Fashion-MNIST training?
+# 4. How does batch size affect the curriculum vs random performance gap?
+
+# Expected Results by Strategy:
+# - medoid_first (Easy→Hard): Traditional curriculum learning
+# - quartiles_only (Easy→Hard, no separate medoids): Similar to medoid_first
+# - inverse (Hard→Easy): Anti-curriculum approach  
+# - round_robin (Max Diversity): Batch variety maximization
+#
+# Expected Batch Size Effects:
+# - Small batches (4, 8, 16): Strong curriculum signal, best chance for structured > random
+# - Medium batches (32): Your current results (structured ≈ random or worse)  
+# - Large batches (64, 128): Weak curriculum signal, structured ≈ random
+# 
+# Key Metrics: 
+# - Best strategy per batch size
+# - Curriculum effectiveness = (Strategy Accuracy - Random Accuracy) per batch size
+# - Optimal batch size identification

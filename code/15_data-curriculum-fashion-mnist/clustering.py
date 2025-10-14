@@ -203,6 +203,7 @@ class FAISSClustering:
                 - "medoid_first": Medoids → Q1 → Q2 → Q3 → Q4 (easy→hard)
                 - "quartiles_only": Q1 → Q2 → Q3 → Q4 (easy→hard, no separate medoids)
                 - "inverse": Q4 → Q3 → Q2 → Q1 → Medoids (hard→easy)
+                - "round_robin": Round-robin sampling from all clusters (max diversity)
                 - "random": Random ordering (baseline)
                 
         Returns:
@@ -254,6 +255,46 @@ class FAISSClustering:
             
         self.logger.info(f"Generated curriculum ordering with strategy '{strategy}': {len(ordered_indices)} samples")
         return ordered_indices
+        
+    def _create_round_robin_ordering(self) -> np.ndarray:
+        """Create round-robin ordering that samples randomly from each cluster.
+        
+        This maximizes batch diversity by ensuring each batch contains samples
+        from as many different clusters as possible.
+        
+        Returns:
+            Ordered indices array with maximum cluster diversity
+        """
+        # Group samples by cluster
+        cluster_samples = {}
+        for cluster_id in range(self.n_clusters):
+            cluster_mask = self.labels == cluster_id
+            cluster_indices = np.where(cluster_mask)[0]
+            
+            if len(cluster_indices) > 0:
+                # Randomly shuffle samples within each cluster
+                rng = np.random.RandomState(self.random_state)
+                rng.shuffle(cluster_indices)
+                cluster_samples[cluster_id] = cluster_indices.tolist()
+                
+        self.logger.info(f"Round-robin: Using {len(cluster_samples)} non-empty clusters")
+        
+        # Find maximum cluster size to know how many rounds we need
+        max_cluster_size = max(len(samples) for samples in cluster_samples.values())
+        
+        ordered_indices = []
+        
+        # Round-robin sampling: cycle through clusters
+        for round_idx in range(max_cluster_size):
+            for cluster_id in sorted(cluster_samples.keys()):
+                cluster_list = cluster_samples[cluster_id]
+                
+                # If this cluster still has samples at this round
+                if round_idx < len(cluster_list):
+                    ordered_indices.append(cluster_list[round_idx])
+        
+        self.logger.info(f"Round-robin ordering: {len(ordered_indices)} samples across {max_cluster_size} rounds")
+        return np.array(ordered_indices)
         
     def get_cluster_info(self) -> Dict:
         """Get comprehensive cluster analysis information.

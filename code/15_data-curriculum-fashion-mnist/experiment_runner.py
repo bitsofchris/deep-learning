@@ -74,19 +74,22 @@ class CurriculumExperimentRunner:
                 num_epochs_list = group.get("num_epochs", [10])
                 batch_sizes = group.get("batch_sizes", [64])
                 learning_rates = group.get("learning_rates", [0.001])
+                random_seeds = group.get("random_seeds", [42])  # Default single seed
                 
                 for epochs in num_epochs_list:
                     for batch_size in batch_sizes:
                         for lr in learning_rates:
-                            exp = {
-                                "ordering_method": "random",
-                                "runs": runs,
-                                "num_epochs": epochs,
-                                "batch_size": batch_size,
-                                "learning_rate": lr,
-                                "curriculum_params": None
-                            }
-                            all_experiments.append(exp)
+                            for seed in random_seeds:
+                                exp = {
+                                    "ordering_method": "random",
+                                    "runs": runs,
+                                    "num_epochs": epochs,
+                                    "batch_size": batch_size,
+                                    "learning_rate": lr,
+                                    "curriculum_params": None,
+                                    "random_seed": seed
+                                }
+                                all_experiments.append(exp)
                             
             elif ordering_method == "curriculum":
                 # Curriculum learning experiments
@@ -193,6 +196,13 @@ class CurriculumExperimentRunner:
         """
         self.logger.info(f"Starting experiment {experiment_id}, run {run_id}")
         self.logger.info(f"Config: {config}")
+        
+        # Set random seeds for reproducibility
+        random_seed = config.get("random_seed", 42)
+        torch.manual_seed(random_seed + run_id)  # Different seed per run
+        np.random.seed(random_seed + run_id)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(random_seed + run_id)
         
         start_time = time.time()
         
@@ -485,6 +495,7 @@ class CurriculumExperimentRunner:
                     "num_epochs": config["num_epochs"],
                     "batch_size": config["batch_size"],
                     "learning_rate": config["learning_rate"],
+                    "random_seed": config.get("random_seed", 42),
                     **results
                 }
                 
@@ -533,15 +544,54 @@ class CurriculumExperimentRunner:
         self.logger.info(f"EXPERIMENT SUMMARY")
         self.logger.info(f"{'='*50}")
         
-        # Group by experimental conditions
-        summary = results_df.groupby(['ordering_method', 'curriculum_strategy']).agg({
-            'final_accuracy': ['mean', 'std', 'count'],
-            'training_time': ['mean', 'std'],
-            'convergence_epoch': ['mean', 'std']
-        }).round(3)
+        # Group by experimental conditions (including random seed for sensitivity analysis)
+        if 'random_seed' in results_df.columns:
+            # Group by both method and random seed for detailed analysis
+            summary = results_df.groupby(['ordering_method', 'curriculum_strategy', 'random_seed']).agg({
+                'final_accuracy': ['mean', 'std', 'count', 'min', 'max'],
+                'training_time': ['mean', 'std'],
+                'convergence_epoch': ['mean', 'std']
+            }).round(3)
+            
+            # Also create overall summary across all seeds
+            overall_summary = results_df.groupby(['ordering_method', 'curriculum_strategy']).agg({
+                'final_accuracy': ['mean', 'std', 'count', 'min', 'max'],
+                'training_time': ['mean', 'std'],
+                'convergence_epoch': ['mean', 'std']
+            }).round(3)
+        else:
+            summary = results_df.groupby(['ordering_method', 'curriculum_strategy']).agg({
+                'final_accuracy': ['mean', 'std', 'count'],
+                'training_time': ['mean', 'std'],
+                'convergence_epoch': ['mean', 'std']
+            }).round(3)
+            overall_summary = summary
         
-        self.logger.info("Summary Statistics:")
+        self.logger.info("Per-Seed Summary Statistics:")
         self.logger.info(f"\n{summary}")
+        
+        if 'random_seed' in results_df.columns:
+            self.logger.info("\nOverall Summary (across all seeds):")
+            self.logger.info(f"\n{overall_summary}")
+            
+            # Random seed sensitivity analysis
+            if results_df['ordering_method'].eq('random').any():
+                random_results = results_df[results_df['ordering_method'] == 'random']
+                seed_sensitivity = random_results.groupby('random_seed')['final_accuracy'].agg(['mean', 'std', 'min', 'max']).round(3)
+                
+                self.logger.info("\n" + "="*50)
+                self.logger.info("RANDOM SEED SENSITIVITY ANALYSIS")
+                self.logger.info("="*50)
+                self.logger.info(f"\n{seed_sensitivity}")
+                
+                # Calculate overall variance across seeds
+                seed_means = random_results.groupby('random_seed')['final_accuracy'].mean()
+                seed_variance = seed_means.var()
+                seed_range = seed_means.max() - seed_means.min()
+                
+                self.logger.info(f"\nRandom Seed Variance: {seed_variance:.6f}")
+                self.logger.info(f"Random Seed Range: {seed_range:.3f}%")
+                self.logger.info(f"Coefficient of Variation: {seed_means.std()/seed_means.mean()*100:.2f}%")
         
         # Compare curriculum vs random
         if 'random' in results_df['ordering_method'].values and 'curriculum' in results_df['ordering_method'].values:

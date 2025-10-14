@@ -1,0 +1,29 @@
+# Random Seed Sensitivity Analysis
+# Tests how sensitive Fashion-MNIST training is to different random seeds
+# Measures variance in final accuracy across multiple random initializations
+
+experiments:
+  # Random Baseline with Multiple Seeds
+  - ordering_method: "random"
+    runs: 3                           # 3 runs per seed for statistical robustness
+    num_epochs: [10]                  # Training epochs  
+    batch_sizes: [32]                 # Batch size
+    learning_rates: [0.005]           # Learning rate
+    random_seeds: [42, 123, 456, 789, 999]  # 5 different random seeds
+    
+# This will create:
+# - 5 seeds × 3 runs = 15 total training runs
+# - Statistical analysis of variance across seeds
+# - Mean, std, min, max accuracy per seed
+# - Overall variance and coefficient of variation
+
+# Research Questions:
+# 1. How much does final accuracy vary across different random seeds?
+# 2. Is the observed curriculum learning "failure" within normal random variance?
+# 3. What's the baseline variance we should expect when comparing methods?
+# 4. Are curriculum differences statistically significant vs random noise?
+
+# Expected Results:
+# - Low seed sensitivity (CV < 5%): Curriculum differences are meaningful
+# - High seed sensitivity (CV > 10%): Random variance dominates, need more seeds
+# - This establishes the "noise floor" for comparing data ordering strategies

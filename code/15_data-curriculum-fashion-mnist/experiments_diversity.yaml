@@ -1,0 +1,54 @@
+# Complete Curriculum Learning Study: 4 Data Ordering Strategies
+# Compares random, easy→hard, hard→easy, and maximum diversity approaches
+
+experiments:
+  # 1. Random Baseline (Control Group)
+  - ordering_method: "random"
+    runs: 1                    # Multiple runs for statistical significance
+    num_epochs: [10]           # Training epochs
+    batch_sizes: [32]          # Batch size
+    learning_rates: [0.005]    # Learning rate
+    
+  # 2. Easy → Hard Curriculum (Traditional Curriculum Learning)
+  - ordering_method: "curriculum"
+    runs: 1
+    num_epochs: [10]
+    batch_sizes: [32]
+    learning_rates: [0.005]
+    strategies: ["medoid_first"]  # Medoids → Q1 → Q2 → Q3 → Q4
+    n_clusters: [50]              # Number of clusters for analysis
+    use_pca: [true]               # Apply PCA before clustering
+    pca_components: [50]          # PCA dimensions
+    
+  # 3. Hard → Easy Curriculum (Anti-Curriculum Learning)
+  - ordering_method: "curriculum"
+    runs: 1
+    num_epochs: [10]
+    batch_sizes: [32]
+    learning_rates: [0.005]
+    strategies: ["inverse"]       # Q4 → Q3 → Q2 → Q1 → Medoids
+    n_clusters: [50]
+    use_pca: [true]
+    pca_components: [50]
+    
+  # 4. Maximum Diversity (Round-Robin Cluster Sampling)
+  - ordering_method: "curriculum"
+    runs: 1
+    num_epochs: [10]
+    batch_sizes: [32] 
+    learning_rates: [0.005]
+    strategies: ["round_robin"]   # Round-robin sampling from all clusters
+    n_clusters: [50]
+    use_pca: [true]
+    pca_components: [50]
+
+# Research Questions:
+# 1. Does curriculum learning (easy→hard) help Fashion-MNIST classification?
+# 2. Does anti-curriculum (hard→easy) perform differently than curriculum?
+# 3. Does maximizing batch diversity outperform difficulty-based ordering?
+# 4. Which data ordering strategy achieves the best final accuracy?
+#
+# Expected Outcomes:
+# - If curriculum helps: Easy→Hard > Random > Hard→Easy
+# - If diversity helps: Max Diversity > Random > Easy→Hard ≈ Hard→Easy  
+# - If curriculum hurts: Random ≈ Max Diversity > Easy→Hard ≈ Hard→Easy
