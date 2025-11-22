@@ -204,12 +204,12 @@ class BaselineTrainer:
         # Save final model checkpoint
         if results_manager:
             experiment_config = {
-                'experiment_id': experiment_id,
-                'run_id': run_id,
-                'data_ordering': 'random',
-                'num_epochs': self.num_epochs,
-                'batch_size': self.batch_size,
-                'learning_rate': self.learning_rate
+                "experiment_id": experiment_id,
+                "run_id": run_id,
+                "data_ordering": "random",
+                "num_epochs": self.num_epochs,
+                "batch_size": self.batch_size,
+                "learning_rate": self.learning_rate,
             }
             checkpoint_path = results_manager.save_final_model(
                 model, optimizer, results, experiment_id, run_id, experiment_config
