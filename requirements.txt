@@ -158,6 +158,7 @@ platformdirs==4.3.6
 plotly==5.24.1
 pluggy==1.5.0
 posthog==3.11.0
+pre-commit==4.0.1
 prometheus_client==0.21.1
 prompt_toolkit==3.0.48
 propcache==0.2.1
