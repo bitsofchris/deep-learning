@@ -1,4 +1,3 @@
-from re import X
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -405,50 +404,3 @@ print("\n=== TRAINING WITH GRAMMAR TEST ===")
 data = generate_data(n_series=2000)
 model = NanoTST()
 train_with_grammar(model, data, epochs=100)
-
-
-# Step 8 - auto regressive
-# Now we see if model can build on its predictions to make something coherent
-def forecast(model, x, n_steps=64, n_samples=50):
-    """
-    Generate future values by predicting one patch at a time.
-    """
-    model.eval()
-    P = model.ps
-    L = CONTEXT_LEN
-    all_samples = []
-
-    for _ in range(n_samples):
-        current = x.clone()
-        generated = []
-
-        patches_needed = (n_steps + P - 1) // P
-        for _ in range(patches_needed):
-            inp = current[:, -L:]
-            mu, sigma = model(inp)
-            sample = torch.normal(mu[:, -1], sigma[:, -1])
-            # denormalize
-            sample_real = model.norm.denormalize(sample)
-            generated.append(sample_real)
-            current = torch.cat([current, sample_real], dim=-1)
-
-        all_samples.append(torch.cat(generated, dim=-1)[:, :n_steps])
-
-    samples = torch.stack(all_samples)
-    return {
-        "median": samples.median(dim=0).values,
-        "mean": samples.mean(dim=0),
-        "q10": samples.quantile(0.1, dim=0),
-        "q90": samples.quantile(0.9, dim=0),
-    }
-
-
-print("\n=== FORECASTING ===")
-test_cases = make_test_cases()
-for name, series in test_cases.items():
-    result = forecast(model, series, n_steps=64, n_samples=30)
-    spread = (result["q90"] - result["q10"]).mean().item()
-    # Compare forecast to what the series "should" do
-    print(
-        f"{name:8s} | forecast first 4: {result['median'][0,:4].tolist()} | spread: {spread:.3f}"
-    )

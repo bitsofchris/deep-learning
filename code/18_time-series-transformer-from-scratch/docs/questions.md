@@ -191,3 +191,50 @@ Normalizes across the feature dimension (128 dims) for each token independently.
 **Q34: `h = h + self.pos(...)` — how does adding a vector encode position?**
 
 Element-wise vector addition. Each patch's 128-dim embedding gets a 128-dim position vector added. The position vector shifts the embedding to a slightly different region of 128-dim space depending on position. The transformer learns to interpret that shift — separating content info from position info through training. Seems crude, works remarkably well.
+
+---
+
+## Evaluation: Grammar Plots vs Forecast Plots
+
+### Q35: What are the grammar eval plots showing during training?
+
+These are **teacher-forced, one-step predictions**. The model sees every real patch as input and predicts the next patch at each position. Patch 0 → predict patch 1, patch 1 → predict patch 2, etc. The model always gets the ground truth as context — it never has to rely on its own output.
+
+This is the **same computation as training** (just without the gradient update). It answers: "given perfect context, can the model predict what comes next?" It's the direct visualization of what the NLL loss is measuring.
+
+**What to watch for across epochs:**
+- Early: predictions are noisy garbage for all patterns. The blue line barely tracks the black target.
+- Mid: flat gets nailed first (easiest pattern — just predict the same value). Line improves next. Sine still rough.
+- Late: sine tracking tightens up. The ±1σ band shrinks where the model is confident and stays wider where it's uncertain. This is the "grammar" learning order — simple structure before complex structure, just like a language model learning articles before grammar before idioms.
+
+### Q36: What are the forecast plots showing? How is this different?
+
+These are **autoregressive, multi-step predictions** — actual inference. We chop the last 4 patches (128 points) off each test series as a holdout. The model sees only the first 12 patches as context, then must predict the held-out 4 patches by feeding its own predictions back as input.
+
+Step by step:
+1. Feed 12 real patches → model predicts patch 13
+2. Append predicted patch 13 → feed 13 patches (12 real + 1 predicted) → predict patch 14
+3. Append predicted patch 14 → predict patch 15
+4. Append predicted patch 15 → predict patch 16
+
+The key difference: **errors compound**. If the model's prediction for patch 13 is slightly off, patch 14's input is already wrong, and the error cascades. This is a much harder test than grammar eval.
+
+**What to watch for across epochs:**
+- Early: forecasts diverge immediately after the split line — the model can't maintain coherent structure from its own outputs.
+- Mid: flat forecast stabilizes (easy to continue "more of the same"). Line direction roughly holds but drifts. Sine falls apart after 1-2 predicted patches.
+- Late: sine continues oscillating past the split. Line maintains slope. The q10–q90 band shows where uncertainty grows — typically widens further from the split as compounding errors accumulate.
+- The MSE in each subplot title is measured against the actual held-out data, so you get a real number for forecast quality.
+
+### Q37: Why do we need both? What's the intuition?
+
+They measure fundamentally different capabilities:
+
+| | Grammar Eval (teacher-forced) | Forecast (autoregressive) |
+|---|---|---|
+| **Analogy** | Fill-in-the-blank test | Write an essay |
+| **Input** | All real data | Own predictions fed back |
+| **Errors** | Independent per position | Compound over steps |
+| **Measures** | "Does the model understand the pattern?" | "Can the model generate the pattern?" |
+| **LLM equivalent** | Perplexity on held-out text | Free generation quality |
+
+A model can ace grammar eval but produce garbage forecasts — it learned to copy local patterns but can't maintain coherent structure over multiple self-fed steps. Watching both plots evolve across epochs shows you when the model transitions from "understands the pattern" to "can actually produce it." That transition is the interesting part.
