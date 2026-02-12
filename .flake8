@@ -1,0 +1,20 @@
+[flake8]
+max-line-length = 120
+ignore =
+    # whitespace / blank line noise
+    W291,W292,W293,W391,
+    # blank lines around functions/classes
+    E302,E303,E301,
+    # unused imports (annoying while iterating)
+    F401,
+    # line too long (black handles this)
+    E501,
+    # missing whitespace around operator
+    E225,
+    # module level import not at top
+    E402
+exclude =
+    .venv,
+    __pycache__,
+    data,
+    results

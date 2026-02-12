@@ -1,0 +1,3 @@
+3. The Hyperparameter Experiments — Change one thing, rerun grammar test
+Each of these takes 2-5 minutes to train. Run the grammar test at the end and compare:
+ExperimentWhat you'll learnn_layers=1 vs 2 vs 4 vs 8How much depth does sine need vs flat line?d_model=32 vs 128 vs 256Capacity — when does more width stop helping?patch_size=8 vs 32 vs 64Bigger patches = fewer tokens but coarser resolution. Sine breaks first.lr=1e-2 vs 3e-4 vs 1e-5Too fast = unstable, too slow = never learns sineTrain on ONLY flat+line dataThen test on sine. Does it generalize at all? (Spoiler: no.)Train on ONLY sine dataThen test on line. What happens?
