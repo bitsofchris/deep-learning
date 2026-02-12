@@ -1,3 +1,4 @@
+from re import X
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -323,13 +324,131 @@ class TransformerModel(nn.Module):
         B, L = x.shape
         x_norm = (x - self.norm.mean) / self.norm.std
         patches = x_norm.view(B, L // self.ps, self.ps)
-        return ((pred[:, :-1] - patches[:, :1]) ** 2).mean()
+        return ((pred[:, :-1] - patches[:, 1:]) ** 2).mean()
 
 
 # Step 5
-data = generate_data(n_series=1000)
-print("\n=== FULL TRANSFORMER (4 layers, 4 heads, MSE) ===")
-transformer = TransformerModel()
-n_params = sum(p.numel() for p in transformer.parameters())
-print(f"Parameters: {n_params:,}")
-train_model(transformer, data, epochs=50, lr=3e-4)
+# data = generate_data(n_series=1000)
+# print("\n=== FULL TRANSFORMER (4 layers, 4 heads, MSE) ===")
+# transformer = TransformerModel()
+# n_params = sum(p.numel() for p in transformer.parameters())
+# print(f"Parameters: {n_params:,}")
+# train_model(transformer, data, epochs=50, lr=3e-4)
+
+
+# Step 6 - Gaussian head
+class GaussianHead(nn.Module):
+    def __init__(self, d_model=128, patch_size=32):
+        super().__init__()
+        self.mu_proj = nn.Linear(d_model, patch_size)
+        self.log_sigma_proj = nn.Linear(d_model, patch_size)
+
+    def forward(self, x):
+        mu = self.mu_proj(x)
+        log_sigma = self.log_sigma_proj(x)
+        sigma = torch.exp(log_sigma.clamp(-10, 10))
+
+        return mu, sigma
+
+
+class NanoTST(nn.Module):
+    def __init__(self, patch_size=32, d_model=128, n_heads=4, n_layers=4):
+        super().__init__()
+        self.ps = patch_size
+        self.norm = InstanceNorm()
+        self.embed = PatchEmbedding(patch_size, d_model)
+        self.pos = nn.Embedding(CONTEXT_LEN // patch_size, d_model)
+        self.blocks = nn.ModuleList(
+            [TransformerBlock(d_model, n_heads) for _ in range(n_layers)]
+        )
+        self.final_norm = nn.LayerNorm(d_model)
+        self.head = GaussianHead(d_model, patch_size)
+
+    def forward(self, x):
+        x_norm = self.norm(x)
+        h = self.embed(x_norm)
+        h = h + self.pos(torch.arange(h.size(1), device=h.device))
+        for block in self.blocks:
+            h = block(h)
+        h = self.final_norm(h)
+        return self.head(h)  # now returns (mu, sigma)
+
+    def forward_and_loss(self, x):
+        mu, sigma = self.forward(x)
+        B, L = x.shape
+        x_norm = (x - self.norm.mean) / self.norm.std
+        patches = x_norm.view(B, L // self.ps, self.ps)
+
+        pred_mu = mu[:, :-1]
+        pred_sigma = sigma[:, :-1]
+        targets = patches[:, 1:]
+
+        # Gaussian NLL as loss metric
+        nll = (
+            0.5 * torch.log(2 * math.pi * pred_sigma**2)
+            + 0.5 * ((targets - pred_mu) / pred_sigma) ** 2
+        )
+        return nll.mean()
+
+
+# print("\n=== NanoTST (Gaussian head) ===")
+# data = generate_data()
+# model = NanoTST()
+# n_params = sum(p.numel() for p in model.parameters())
+# print(f"Parameters: {n_params:,}")
+# train_model(model, data, epochs=50, lr=3e-4)
+
+# Step 7 - Grammar eval
+from ts_grammar_eval import train_with_grammar
+
+print("\n=== TRAINING WITH GRAMMAR TEST ===")
+data = generate_data(n_series=2000)
+model = NanoTST()
+train_with_grammar(model, data, epochs=100)
+
+
+# Step 8 - auto regressive
+# Now we see if model can build on its predictions to make something coherent
+def forecast(model, x, n_steps=64, n_samples=50):
+    """
+    Generate future values by predicting one patch at a time.
+    """
+    model.eval()
+    P = model.ps
+    L = CONTEXT_LEN
+    all_samples = []
+
+    for _ in range(n_samples):
+        current = x.clone()
+        generated = []
+
+        patches_needed = (n_steps + P - 1) // P
+        for _ in range(patches_needed):
+            inp = current[:, -L:]
+            mu, sigma = model(inp)
+            sample = torch.normal(mu[:, -1], sigma[:, -1])
+            # denormalize
+            sample_real = model.norm.denormalize(sample)
+            generated.append(sample_real)
+            current = torch.cat([current, sample_real], dim=-1)
+
+        all_samples.append(torch.cat(generated, dim=-1)[:, :n_steps])
+
+    samples = torch.stack(all_samples)
+    return {
+        "median": samples.median(dim=0).values,
+        "mean": samples.mean(dim=0),
+        "q10": samples.quantile(0.1, dim=0),
+        "q90": samples.quantile(0.9, dim=0),
+    }
+
+
+print("\n=== FORECASTING ===")
+test_cases = make_test_cases()
+for name, series in test_cases.items():
+    result = forecast(model, series, n_steps=64, n_samples=30)
+    spread = (result["q90"] - result["q10"]).mean().item()
+    # Compare forecast to what the series "should" do
+    print(
+        f"{name:8s} | forecast first 4: {result['median'][0,:4].tolist()} | spread: {spread:.3f}"
+    )
