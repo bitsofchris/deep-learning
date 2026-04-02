@@ -177,53 +177,72 @@ def create_pod(
 
 def setup_pod(pod_id: str):
     """Upload project code and install dependencies on the pod."""
+    import time as _time
     from runpod.cli.utils.ssh_cmd import SSHConnection
 
+    t0 = _time.time()
+
     with SSHConnection(pod_id) as ssh:
-        logger.info("Setting up pod %s...", pod_id)
+        logger.info("[setup 1/5] Connected to pod %s", pod_id)
 
         # Create project directory
         ssh.run_commands([f"mkdir -p {WORKSPACE}"])
 
-        # Upload project files
-        logger.info("Uploading project files...")
+        # Collect files to upload
         files_to_upload = []
-
-        # Collect all Python files and config
         for pattern in ["*.py", "*.yaml", "*.txt"]:
             files_to_upload.extend(PROJECT_ROOT.glob(pattern))
         for subdir in ["market", "model", "eval"]:
             for py_file in (PROJECT_ROOT / subdir).rglob("*.py"):
                 files_to_upload.append(py_file)
 
-        for local_path in files_to_upload:
+        logger.info("[setup 2/5] Uploading %d code files...", len(files_to_upload))
+        for i, local_path in enumerate(files_to_upload):
             rel_path = local_path.relative_to(PROJECT_ROOT)
             remote_path = f"{WORKSPACE}/{rel_path}"
-            # Ensure remote directory exists
             remote_dir = str(Path(remote_path).parent)
             ssh.run_commands([f"mkdir -p {remote_dir}"])
             ssh.put_file(str(local_path), remote_path)
+        logger.info(
+            "[setup 2/5] Code uploaded (%d files, %.1fs)",
+            len(files_to_upload),
+            _time.time() - t0,
+        )
 
         # Upload SQLite DB
         db_path = PROJECT_ROOT / "market" / "commodities.db"
         if db_path.exists():
-            logger.info(
-                "Uploading database (%d MB)...", db_path.stat().st_size // (1024 * 1024)
-            )
+            db_mb = db_path.stat().st_size / (1024 * 1024)
+            logger.info("[setup 3/5] Uploading database (%.1f MB)...", db_mb)
+            t_db = _time.time()
             ssh.put_file(str(db_path), f"{WORKSPACE}/market/commodities.db")
+            logger.info("[setup 3/5] Database uploaded (%.1fs)", _time.time() - t_db)
         else:
-            logger.warning("No local DB found — will need to run download on pod")
+            logger.warning(
+                "[setup 3/5] No local DB found — will need to run download on pod"
+            )
 
-        # Install dependencies
-        logger.info("Installing dependencies...")
+        # Install uv
+        logger.info("[setup 4/5] Installing uv package manager...")
+        ssh.run_commands(
+            [
+                "command -v uv > /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh"
+            ]
+        )
+        logger.info("[setup 4/5] uv ready (%.1fs total)", _time.time() - t0)
+
+        # Install Python dependencies
+        logger.info("[setup 5/5] Installing Python dependencies via uv...")
+        t_deps = _time.time()
         ssh.run_commands(
             [
                 f"cd {WORKSPACE}",
-                "pip install -q pyyaml pandas numpy yfinance toto-ts 2>&1 | tail -5",
+                "export PATH=$HOME/.local/bin:$PATH && uv pip install --system pyyaml pandas numpy yfinance toto-ts 2>&1 | tail -5",
             ]
         )
+        logger.info("[setup 5/5] Dependencies installed (%.1fs)", _time.time() - t_deps)
 
-        logger.info("Pod setup complete")
+    logger.info("Pod setup complete (%.1fs total)", _time.time() - t0)
 
 
 def run_on_pod(pod_id: str, command: str) -> str:
