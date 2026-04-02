@@ -3,6 +3,10 @@ env
 *.pyc
 *.npy
 *data/
+# Allow data source code in project 19 (override *data/ above)
+!code/19_toto-oil-futures/data/
+!code/19_toto-oil-futures/data/*/
+!code/19_toto-oil-futures/data/**/*.py
 .vscode/
 .DS_Store
 *.env
@@ -14,3 +18,4 @@ notes_network.html
 results/
 images/
 docs-local/
+local-docs/
