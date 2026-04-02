@@ -1,0 +1,64 @@
+data:
+  source: "yfinance"
+  start_date: "2000-01-01"
+  target: "returns"  # what we predict: close, returns, log_returns
+
+  # All tickers used for fine-tuning
+  train_tickers:
+    # Energy futures
+    - CL=F   # Crude Oil WTI
+    - BZ=F   # Brent Crude
+    - NG=F   # Natural Gas
+    - HO=F   # Heating Oil
+    - RB=F   # RBOB Gasoline
+    # Metals futures
+    - GC=F   # Gold
+    - SI=F   # Silver
+    - HG=F   # Copper
+    # Agriculture futures
+    - ZC=F   # Corn
+    - ZW=F   # Wheat
+    - ZS=F   # Soybeans
+    - KC=F   # Coffee
+    - SB=F   # Sugar
+    - CT=F   # Cotton
+    # ETFs (cleaner data, no roll artifacts)
+    - USO    # US Oil Fund
+    - UNG    # US Natural Gas Fund
+    - GLD    # Gold ETF
+    - SLV    # Silver ETF
+    - DBA    # Agriculture ETF
+    - DBC    # Commodity Index ETF
+
+  # Tickers we evaluate/forecast on
+  eval_tickers:
+    - CL=F   # Crude Oil — primary target
+    - NG=F   # Natural Gas
+    - GC=F   # Gold
+    - HG=F   # Copper
+    - ZS=F   # Soybeans
+
+  # Derived features as Toto exogenous variables (Phase 2)
+  exogenous_features: []
+
+cv:
+  method: "purged_kfold"   # purged_kfold | cpcv | walk_forward
+  n_folds: 3               # 3 for MVP (limited data)
+  embargo_pct: 0.01        # 1% of data ~ 50 trading days
+  purge_days: 5            # matches prediction_length
+  # cpcv_n_groups: 6       # Phase 2
+  # cpcv_p_test: 2         # Phase 2
+
+model:
+  base_model: "Datadog/Toto-Open-Base-1.0"
+  context_factor: 8         # context_length = patch_size(64) * context_factor = 512
+  prediction_length: 5      # Forecast horizon (trading days)
+  batch_size: 16
+  learning_rate: 4.0e-5
+  warmup_steps: 1000
+  stable_steps: 200
+  decay_steps: 200
+  num_samples: 256
+
+eval:
+  primary_metric: "directional_accuracy"

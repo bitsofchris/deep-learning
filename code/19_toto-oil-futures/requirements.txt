@@ -1,0 +1,15 @@
+# Core dependencies
+pyyaml>=6.0
+pandas>=2.0
+numpy>=1.24
+yfinance>=0.2.28
+
+# Toto model (install separately — requires CUDA for training)
+# pip install toto-ts
+
+# Notebook / visualization
+# matplotlib>=3.7
+# jupyter
+
+# Web app (Phase 6)
+# streamlit>=1.30

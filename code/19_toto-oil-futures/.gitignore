@@ -1,0 +1,18 @@
+# SQLite database (downloaded data, regenerable)
+*.db
+
+# Data files
+*.parquet
+*.csv
+
+# Local docs (planning, not tracked — covered by repo-level gitignore)
+local-docs/
+
+# Test scripts
+test_*.py
+
+# Checkpoints
+checkpoints/
+
+# Autoresearch results
+autoresearch/results.tsv
