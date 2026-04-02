@@ -75,14 +75,19 @@ def build_masked_timeseries(
     # Daily data = 86400 seconds interval
     interval = torch.tensor([86400.0], dtype=torch.float64)  # (1,)
 
-    return MaskedTimeseries(
+    # Build with num_exogenous_variables if the installed toto-ts version supports it
+    fields = MaskedTimeseries._fields
+    kwargs = dict(
         series=series_tensor.to(device),
         padding_mask=padding_mask.to(device),
         id_mask=id_mask.to(device),
         timestamp_seconds=timestamp_tensor.to(device),
         time_interval_seconds=interval.to(device),
-        num_exogenous_variables=0,
     )
+    if "num_exogenous_variables" in fields:
+        kwargs["num_exogenous_variables"] = 0
+
+    return MaskedTimeseries(**kwargs)
 
 
 def load_model(checkpoint_path: str | None, base_model: str, device: torch.device):
@@ -137,13 +142,22 @@ def forecast_ticker(
         masked_ts,
         prediction_length=prediction_length,
         num_samples=num_samples,
+        samples_per_batch=num_samples,  # all samples in one GPU batch
         use_kv_cache=True,
     )
 
+    # Move quantile tensors to same device as forecast samples
+    sample_device = forecast.samples.device if hasattr(forecast, "samples") else device
     result = {
         "median": forecast.median.cpu().numpy().flatten(),
-        "q05": forecast.quantile(q=torch.tensor([0.05])).cpu().numpy().flatten(),
-        "q95": forecast.quantile(q=torch.tensor([0.95])).cpu().numpy().flatten(),
+        "q05": forecast.quantile(q=torch.tensor([0.05], device=sample_device))
+        .cpu()
+        .numpy()
+        .flatten(),
+        "q95": forecast.quantile(q=torch.tensor([0.95], device=sample_device))
+        .cpu()
+        .numpy()
+        .flatten(),
     }
     return result
 

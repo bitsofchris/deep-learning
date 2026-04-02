@@ -37,23 +37,40 @@ python run_remote.py finetune --fold 2
 
 ---
 
-## Execution Plan (4 Experiments)
+## Execution Plan (4 Experiments, All Parallel)
 
 See [experiment-design.md](../local-docs/experiment-design.md) for full details.
 
 **Question:** Can fine-tuning Toto on commodities beat zero-shot? How does vol-adjusted returns compare to raw returns?
 
-| # | Experiment | Target | Command | Est. Cost |
-|---|-----------|--------|---------|-----------|
-| 1 | Naive baselines | — | Local CPU (free) | $0 |
-| 2 | Zero-shot on returns | `returns` | `run_remote.py forecast --fold 2` | ~$0.05 |
-| 3 | Zero-shot on vol-adj | `vol_adj_returns` | Change config target, re-run forecast | ~$0.05 |
-| 4 | Fine-tune on returns | `returns` | `run_remote.py finetune --fold 2` | ~$0.20 |
-| 5 | Fine-tune on vol-adj | `vol_adj_returns` | Change config target, re-run finetune | ~$0.20 |
+```bash
+cd code/19_toto-oil-futures
+
+# Terminal 1: Zero-shot on returns (~5 min)
+python run_remote.py forecast --fold 2 --target returns --experiment-id zs_returns
+
+# Terminal 2: Zero-shot on vol-adjusted returns (~5 min)
+python run_remote.py forecast --fold 2 --target vol_adj_returns --experiment-id zs_voladj
+
+# Terminal 3: Fine-tune on returns (~30 min, TensorBoard auto-opens)
+python run_remote.py finetune --fold 2 --target returns --experiment-id ft_returns
+
+# Terminal 4: Fine-tune on vol-adjusted returns (~30 min)
+python run_remote.py finetune --fold 2 --target vol_adj_returns --experiment-id ft_voladj
+```
+
+Each creates its own pod, runs independently, downloads to `results/<experiment_id>.db`.
+
+```bash
+# After all 4 finish — merge into local DB and compare
+python -m eval.merge_results results/*.db
+python -m eval.evaluate --compare zs_returns zs_voladj ft_returns_eval ft_voladj_eval
+```
 
 **Fold 2:** Train 2000–2017 (17 years), test 2017–2026 (8.7 years), 66-day embargo.
 **Eval tickers:** CL=F (oil), NG=F, GC=F, HG=F, ZS=F.
 **Success bar:** Beat naive always-up baseline of 52.2% directional accuracy.
+**Total cost:** ~$0.50 (4 pods, ~30 min wall time).
 
 ---
 
@@ -63,17 +80,24 @@ See [experiment-design.md](../local-docs/experiment-design.md) for full details.
 
 ```bash
 # Zero-shot inference: create pod → forecast → evaluate → download → terminate
-python run_remote.py forecast --fold 2
+python run_remote.py forecast --fold 2 --target returns --experiment-id zs_returns
 
 # Fine-tune + forecast: create pod → train → forecast → evaluate → download → terminate
-python run_remote.py finetune --fold 2
+python run_remote.py finetune --fold 2 --target returns --experiment-id ft_returns
 ```
+
+Key flags:
+- `--target` — which column to predict (`returns`, `vol_adj_returns`, `log_returns`)
+- `--experiment-id` — name the experiment (used for DB labels + download filenames)
+- `--fold` — CV fold number (0, 1, 2)
+- `--keep-pod` — don't terminate after (for debugging)
+- `--no-browser` — skip auto-opening TensorBoard
 
 Both commands:
 - Stream live logs to your terminal
 - `finetune` auto-opens TensorBoard in browser (RunPod proxy)
 - Training runs in tmux — survives SSH drops and Ctrl+C
-- Auto-downloads DB + lightning_logs + run.log when done
+- Downloads to `results/<experiment_id>.db` (not overwriting local DB)
 - Auto-terminates pod (unless `--keep-pod`)
 
 ### Monitoring (while experiment runs)
@@ -87,6 +111,10 @@ python run_remote.py ssh --pod-id <id> -i         # interactive shell on pod
 ### Results (after download)
 
 ```bash
+# Merge parallel pod results into local DB (idempotent, safe to re-run)
+python -m eval.merge_results results/*.db
+
+# Then query
 python -m eval.evaluate --list                                    # list all experiments
 python -m eval.evaluate --experiment-id <id>                      # metrics for one
 python -m eval.evaluate --compare <id1> <id2>                     # side-by-side

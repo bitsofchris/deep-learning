@@ -151,27 +151,38 @@ def create_pod(
         gpu_type_id=gpu_type,
         volume_in_gb=DEFAULT_VOLUME_SIZE,
         container_disk_in_gb=DEFAULT_CONTAINER_DISK,
+        ports="22/tcp",  # Explicitly request SSH port
+        support_public_ip=True,
     )
     pod_id = pod["id"]
     logger.info("Pod created: %s", pod_id)
 
-    # Wait for RUNNING status
-    logger.info("Waiting for pod to be ready...")
+    # Wait for RUNNING status with SSH port available
+    logger.info("Waiting for pod to be ready (need SSH port)...")
     for attempt in range(120):
         status = runpod.get_pod(pod_id)
         desired = status.get("desiredStatus", "")
         runtime = status.get("runtime")
 
-        # Pod is ready when desiredStatus=RUNNING and runtime has ports
-        if desired == "RUNNING" and runtime and runtime.get("ports"):
-            logger.info("Pod is running")
-            return status
+        if desired == "RUNNING" and runtime:
+            ports = runtime.get("ports") or []
+            # Check that SSH port (22/tcp) is exposed
+            has_ssh = any(p.get("privatePort") == 22 for p in ports)
+            if has_ssh:
+                # Smoke-test actual SSH before declaring ready
+                # (port can appear before sshd accepts connections)
+                try:
+                    _ssh_read(pod_id, "echo ready")
+                    logger.info("Pod is running (SSH verified)")
+                    return status
+                except Exception:
+                    logger.debug("  SSH port exposed but connection not yet accepted")
 
         time.sleep(5)
         if attempt % 12 == 0:
             logger.info("  Still waiting... (%ds, status=%s)", attempt * 5, desired)
 
-    logger.error("Pod did not become ready in 10 minutes")
+    logger.error("Pod did not become ready with SSH in 10 minutes")
     sys.exit(1)
 
 
@@ -222,8 +233,8 @@ def setup_pod(pod_id: str):
                 "[setup 3/5] No local DB found — will need to run download on pod"
             )
 
-        # Install uv
-        logger.info("[setup 4/5] Installing uv package manager...")
+        # Install uv (fast pip replacement, ~2s)
+        logger.info("[setup 4/5] Installing uv...")
         ssh.run_commands(
             [
                 "command -v uv > /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh"
@@ -237,7 +248,7 @@ def setup_pod(pod_id: str):
         ssh.run_commands(
             [
                 f"cd {WORKSPACE}",
-                "export PATH=$HOME/.local/bin:$PATH && uv pip install --system pyyaml pandas numpy yfinance toto-ts 2>&1 | tail -5",
+                "export PATH=$HOME/.local/bin:$PATH && uv pip install --system pyyaml pandas numpy yfinance 'toto-ts>=0.2.0' 2>&1 | tail -5",
             ]
         )
         logger.info("[setup 5/5] Dependencies installed (%.1fs)", _time.time() - t_deps)
@@ -258,79 +269,74 @@ def run_on_pod(pod_id: str, command: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# tmux-based execution — runs commands on the pod inside a tmux session so
-# they survive SSH disconnects. Local terminal tails the log file.
+# nohup-based execution — runs commands on the pod via nohup so they survive
+# SSH disconnects. No tmux install needed. Local terminal tails the log file.
 # ---------------------------------------------------------------------------
 
-TMUX_SESSION = "toto"
 SENTINEL_FILE = f"{WORKSPACE}/.job_done"
 LOG_FILE = f"{WORKSPACE}/run.log"
 
 
-def run_in_tmux(pod_id: str, commands: list[str], job_name: str = "train"):
-    """Start commands inside a tmux session on the pod.
+def run_nohup(pod_id: str, commands: list[str], job_name: str = "train"):
+    """Launch commands on the pod via nohup (survives SSH disconnect).
 
-    The command sequence is wrapped so that:
-    - All output is tee'd to run.log
-    - A sentinel file (.job_done) is written on completion with exit code
-    - The tmux session persists if SSH drops
-
-    Args:
-        pod_id: RunPod pod ID
-        commands: List of shell commands to run sequentially
-        job_name: Label for logging
+    Writes a small bash script to the pod and runs it with nohup.
+    All output goes to run.log, sentinel file signals completion.
+    No tmux needed — works on any Linux box.
     """
-    from runpod.cli.utils.ssh_cmd import SSHConnection
-
-    # Build a single script that runs all commands, logs everything, and writes sentinel
+    # Build a bash script to run on the pod
     script_lines = [
+        "#!/bin/bash",
+        "set -o pipefail",
         f"cd {WORKSPACE}",
         f"rm -f {SENTINEL_FILE}",
-        f"echo '=== {job_name} started at $(date) ===' >> {LOG_FILE}",
+        f"echo '=== {job_name} started at '$(date)' ===' >> {LOG_FILE}",
     ]
     for cmd in commands:
-        # Each command: run, capture exit code, abort on failure
+        script_lines.append(f"echo '>>> {cmd}' >> {LOG_FILE}")
         script_lines.append(
-            f"echo '>>> {cmd}' >> {LOG_FILE} && "
-            f"({cmd}) 2>&1 | tee -a {LOG_FILE}; "
-            f"EXIT_CODE=${{PIPESTATUS[0]}}; "
-            f"if [ $EXIT_CODE -ne 0 ]; then "
-            f'  echo "FAILED: {cmd} (exit $EXIT_CODE)" >> {LOG_FILE}; '
-            f'  echo "failed:$EXIT_CODE" > {SENTINEL_FILE}; '
-            f"  exit $EXIT_CODE; "
+            f"({cmd}) >> {LOG_FILE} 2>&1\n"
+            f"EXIT_CODE=$?\n"
+            f"if [ $EXIT_CODE -ne 0 ]; then\n"
+            f'  echo "FAILED: {cmd} (exit $EXIT_CODE)" >> {LOG_FILE}\n'
+            f'  echo "failed:$EXIT_CODE" > {SENTINEL_FILE}\n'
+            f"  exit $EXIT_CODE\n"
             f"fi"
         )
     script_lines.append(
-        f"echo '=== {job_name} completed at $(date) ===' >> {LOG_FILE} && "
+        f"echo '=== {job_name} completed at '$(date)' ===' >> {LOG_FILE}\n"
         f"echo 'done:0' > {SENTINEL_FILE}"
     )
 
-    full_script = " && ".join(script_lines)
+    script_content = "\n".join(script_lines)
+    script_path = f"{WORKSPACE}/_job.sh"
 
-    with SSHConnection(pod_id) as ssh:
-        # Kill any previous session, start fresh
-        ssh.run_commands(
-            [
-                f"tmux kill-session -t {TMUX_SESSION} 2>/dev/null || true",
-                f"rm -f {SENTINEL_FILE}",
-                f"truncate -s 0 {LOG_FILE} 2>/dev/null || true",
-            ]
-        )
-        # Launch in detached tmux
-        # Use tmux send-keys so the shell sources .bashrc properly
-        ssh.run_commands(
-            [
-                f"tmux new-session -d -s {TMUX_SESSION}",
-                f"tmux send-keys -t {TMUX_SESSION} '{full_script}' Enter",
-            ]
-        )
+    import paramiko
 
-    logger.info(
-        "Job '%s' launched in tmux session '%s' on pod %s",
-        job_name,
-        TMUX_SESSION,
-        pod_id,
+    info = get_ssh_info(pod_id)
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(
+        info["ip"],
+        port=info["port"],
+        username="root",
+        key_filename=info["key_file"],
     )
+
+    # Write script, clear old state, launch with nohup
+    for cmd in [
+        f"rm -f {SENTINEL_FILE}",
+        f"truncate -s 0 {LOG_FILE} 2>/dev/null || true",
+        f"cat > {script_path} << 'JOBSCRIPT_EOF'\n{script_content}\nJOBSCRIPT_EOF",
+        f"chmod +x {script_path}",
+        f"nohup bash {script_path} > /dev/null 2>&1 &",
+    ]:
+        _, stdout, stderr = client.exec_command(cmd)
+        stdout.channel.recv_exit_status()  # wait for each command
+
+    client.close()
+
+    logger.info("Job '%s' launched via nohup on pod %s", job_name, pod_id)
 
 
 def tail_logs(pod_id: str) -> subprocess.Popen:
@@ -501,21 +507,28 @@ def _run_job(
     job_name: str,
     tensorboard: bool = False,
 ):
-    """Shared workflow for finetune/forecast: launch in tmux, tail logs, download.
+    """Shared workflow for finetune/forecast: launch via nohup, tail logs, download.
 
-    1. Create pod, upload code + DB
+    1. Create pod (or reuse --pod-id), upload code + DB
     2. (optional) Start TensorBoard
-    3. Launch commands inside tmux on the pod
+    3. Launch commands via nohup on the pod
     4. Tail run.log to this terminal
     5. Poll for completion
     6. Download results
-    7. Terminate (unless --keep-pod)
+    7. Terminate (unless --keep-pod or --pod-id)
 
-    Ctrl+C during tailing is safe — training continues in tmux.
+    Ctrl+C during tailing is safe — job keeps running via nohup on the pod.
     """
     api_key = init_runpod(args.api_key)
-    pod = create_pod(api_key, gpu_type=args.gpu)
-    pod_id = pod["id"]
+
+    # Reuse existing pod or create fresh
+    reuse_pod = getattr(args, "pod_id", None)
+    if reuse_pod:
+        pod_id = reuse_pod
+        logger.info("Reusing existing pod %s", pod_id)
+    else:
+        pod = create_pod(api_key, gpu_type=args.gpu)
+        pod_id = pod["id"]
 
     try:
         setup_pod(pod_id)
@@ -525,18 +538,18 @@ def _run_job(
         if tensorboard:
             tb_url = start_tensorboard(pod_id)
 
-        # Launch the job in tmux (detached, survives SSH drops)
-        run_in_tmux(pod_id, commands, job_name=job_name)
+        # Launch the job via nohup (survives SSH drops)
+        run_nohup(pod_id, commands, job_name=job_name)
 
         # Print status banner
         print(f"\n{'='*60}")
         print(f"  Pod ID:    {pod_id}")
         print(f"  Job:       {job_name}")
-        print(f"  Status:    RUNNING (in tmux session '{TMUX_SESSION}')")
+        print(f"  Status:    RUNNING (via nohup)")
         if tb_url:
             print(f"  TensorBoard: {tb_url}")
         print(f"{'='*60}")
-        print(f"  Ctrl+C to detach — training keeps running on pod.")
+        print("  Ctrl+C to detach — training keeps running on pod.")
         print(f"  Reconnect:  python run_remote.py monitor --pod-id {pod_id}")
         print(f"  SSH in:     python run_remote.py ssh --pod-id {pod_id} -i")
         print(f"{'='*60}\n")
@@ -574,8 +587,9 @@ def _run_job(
         logger.info("To merge: python -m eval.merge_results results/%s.db", job_name)
 
     finally:
-        if not args.keep_pod:
-            # Only auto-terminate if we didn't Ctrl+C (handled above via return)
+        if reuse_pod:
+            logger.info("Pod %s kept alive (reused via --pod-id)", pod_id)
+        elif not args.keep_pod:
             terminate_pod(api_key, pod_id)
         else:
             print(f"\nPod {pod_id} kept alive. Remember to terminate!")
@@ -762,6 +776,9 @@ def main():
     )
     p_forecast.add_argument("--experiment-id", type=str, help="Custom experiment ID")
     p_forecast.add_argument(
+        "--pod-id", type=str, help="Reuse existing pod (skip create, don't terminate)"
+    )
+    p_forecast.add_argument(
         "--keep-pod", action="store_true", help="Don't terminate pod after"
     )
     p_forecast.add_argument(
@@ -775,6 +792,9 @@ def main():
         "--target", type=str, help="Target column (returns, vol_adj_returns)"
     )
     p_finetune.add_argument("--experiment-id", type=str, help="Custom experiment ID")
+    p_finetune.add_argument(
+        "--pod-id", type=str, help="Reuse existing pod (skip create, don't terminate)"
+    )
     p_finetune.add_argument(
         "--keep-pod", action="store_true", help="Don't terminate pod after"
     )
