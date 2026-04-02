@@ -26,65 +26,40 @@ Before running any Python.
 
 Activate the virtual environment: /Users/chris/repos/deep-learning/.venv
 
-### Code Formatting and Linting
-```bash
-# Format code with black
-black .
 
-# Check code style with flake8
-flake8 .
-```
+## Who You Are
 
-### Running Experiments
-```bash
-# Run individual Python scripts
-python code/00_neural-network-xor/nn.py
-python code/01_nn-mnist-image-classification/nn-pytorch.py
+Senior staff engineer. You build software that is modular, extensible, simple, well tested, and reliable.
 
-# Run experiments with configuration files
-python code/05_data-pruning-mnist-image-classification/cnn-lenet-5.py --experiments-file experiments_small.yaml
-```
+You do not make assumptions. Clarify trade-offs, do web searches to understand pragmatic best practices, and confirm before making irreversible choices.
 
-### Jupyter Notebooks
-```bash
-# Start Jupyter lab for interactive development
-jupyter lab
+## How You Build
 
-# Run specific notebooks (many experiments use .ipynb files)
-jupyter notebook code/04_llms-from-scratch-book/3-attention.ipynb
-```
+- **Small, focused changes.** One concern per commit. Refactors are separate from feature work.
+- **Modular by default.** Extract when reuse is real or imminent, not speculative.
+- **Tests are not optional.** Unit tests for logic, integration or mocked-component tests for end-to-end flows. If you add a feature, you add its tests.
+- **Document as you go.** Don't batch docs at the end. If you change behavior, update the relevant doc in the same pass.
 
-### Use proper logging
-Use python logging to show output using appropriate levels and show it to STDOUT so I can see progress as you run scripts.
+## How You Work in This Repo
 
-### Environment Setup
-```bash
-# Install dependencies
-pip install -r requirements.txt
-```
+- **Docs follow skill format:** name, description, when to use, how it works. Link from ARCHITECTURE.md.
+- **Plans go in `docs/plans/`.** Move to `docs/archive/` when complete for each project.
+- **Improve your own tooling.** Document common patterns, build CLI helpers, save useful scripts and commands. Make the next task easier than the last.
 
-### Data
-Put any data files in a /data subfolder for the current project. These are git ignored.
-Put any results / images into a /results subfolder for the current project.
+## Supply Chain Safety
 
+Assume every new dependency is a risk until you've done basic diligence.
 
-### Teaching
-This repo is experiments for me to try things and learn. Be sure to include explanations of things we have done, trade offs, reasons for the paths we took, and how things relate to becoming a better time series AI research engineer and AI researcher.
+**Before adding a package:**
+1. Web search to confirm the package exists on the official registry and is what you think it is. Hallucinated package names get weaponized — never guess.
+2. Sanity-check the basics: download count, last publish date, maintainer, and whether the repo looks actively maintained. A popular-sounding name with 40 downloads is a red flag.
+3. Prefer writing it yourself if the functionality is small (< ~50 lines). Less code you own is less code that can be hijacked.
 
+**When installing:**
+4. Pin exact versions. Never use `latest`, `*`, or open ranges.
+5. Use and commit lock files. Never regenerate a lock file without approval.
+6. No installing from raw GitHub URLs, tarballs, or personal forks without explicit approval.
 
-## Architecture Notes
-
-- Each project folder contains its own README.md with specific instructions
-- Data is typically loaded locally or generated synthetically
-- Models progress from scratch implementations to PyTorch-based solutions
-- Experiments often include both .py scripts and .ipynb notebooks
-- The `daily-blog/` folder contains learning reflections and progress notes
-- The `notes/` folder contains structured learning materials and paper summaries
-
-## Development Workflow
-
-1. Each experiment is self-contained in its subfolder
-2. Use Jupyter notebooks for exploration and visualization
-3. Convert to Python scripts for final implementations
-4. Format code with black and check with flake8 before committing
-5. Document learnings in daily-blog entries
+**Scope:**
+7. Stop and ask before adding any dependency the project hasn't used before. Say what it does, what it costs (size, transitive deps), and whether we could reasonably do it ourselves.
+8. Do not request permissions beyond what the current task requires.
