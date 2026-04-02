@@ -33,11 +33,17 @@ def compute_metrics(predictions: pd.DataFrame) -> dict:
     """Compute evaluation metrics from a predictions DataFrame.
 
     Expects columns: predicted, actual, horizon
-    Returns dict with mae, rmse, directional_acc, n_predictions.
+    Returns dict with mae, rmse, directional_acc, sharpe, n_predictions.
     """
     df = predictions.dropna(subset=["predicted", "actual"])
     if df.empty:
-        return {"mae": None, "rmse": None, "directional_acc": None, "n_predictions": 0}
+        return {
+            "mae": None,
+            "rmse": None,
+            "directional_acc": None,
+            "sharpe": None,
+            "n_predictions": 0,
+        }
 
     errors = df["predicted"] - df["actual"]
     mae = float(np.mean(np.abs(errors)))
@@ -45,15 +51,23 @@ def compute_metrics(predictions: pd.DataFrame) -> dict:
 
     # Directional accuracy: did the forecast get the sign right?
     # For returns: predicted > 0 means "up", actual > 0 means "up"
-    # For prices: compare predicted vs last known (predicted - lag) direction
     pred_dir = (df["predicted"] > 0).astype(int)
     actual_dir = (df["actual"] > 0).astype(int)
     directional_acc = float((pred_dir == actual_dir).mean())
+
+    # Simulated Sharpe: if we go long when predicted > 0, flat otherwise
+    # The "return" we capture is actual * sign(predicted)
+    strategy_returns = df["actual"] * np.where(df["predicted"] > 0, 1, -1)
+    if strategy_returns.std() > 0:
+        sharpe = float(np.sqrt(252) * strategy_returns.mean() / strategy_returns.std())
+    else:
+        sharpe = 0.0
 
     return {
         "mae": mae,
         "rmse": rmse,
         "directional_acc": directional_acc,
+        "sharpe": sharpe,
         "n_predictions": len(df),
     }
 
@@ -108,8 +122,8 @@ def evaluate_experiment(
             # Write to evaluations table
             conn.execute(
                 """INSERT OR REPLACE INTO evaluations
-                   (experiment_id, ticker, cv_fold, mae, rmse, directional_acc, n_predictions)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                   (experiment_id, ticker, cv_fold, mae, rmse, directional_acc, sharpe, n_predictions)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     experiment_id,
                     ticker,
@@ -117,6 +131,7 @@ def evaluate_experiment(
                     metrics["mae"],
                     metrics["rmse"],
                     metrics["directional_acc"],
+                    metrics["sharpe"],
                     metrics["n_predictions"],
                 ),
             )
@@ -126,8 +141,8 @@ def evaluate_experiment(
         results.append({"ticker": "ALL", **all_metrics})
         conn.execute(
             """INSERT OR REPLACE INTO evaluations
-               (experiment_id, ticker, cv_fold, mae, rmse, directional_acc, n_predictions)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+               (experiment_id, ticker, cv_fold, mae, rmse, directional_acc, sharpe, n_predictions)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 experiment_id,
                 "ALL",
@@ -135,18 +150,30 @@ def evaluate_experiment(
                 all_metrics["mae"],
                 all_metrics["rmse"],
                 all_metrics["directional_acc"],
+                all_metrics["sharpe"],
                 all_metrics["n_predictions"],
             ),
         )
+
+        # Trial-aware reporting
+        n_trials = conn.execute(
+            "SELECT COUNT(*) FROM experiments WHERE status='completed'"
+        ).fetchone()[0]
 
         # Print results
         results_df = pd.DataFrame(results)
         print("\n" + "=" * 70)
         print(f"  Experiment: {experiment_id}")
         print(f"  Notes: {exp.iloc[0].get('notes', '')}")
+        if n_trials > 1:
+            print(
+                f"  ⚠ Trial {n_trials} of {n_trials} — multiple comparisons increase false positive risk"
+            )
         print("=" * 70)
-        print(f"\n  {'Ticker':8s} {'MAE':>8s} {'RMSE':>8s} {'Dir Acc':>8s} {'N':>6s}")
-        print("  " + "-" * 42)
+        print(
+            f"\n  {'Ticker':8s} {'MAE':>8s} {'RMSE':>8s} {'Dir Acc':>8s} {'Sharpe':>8s} {'N':>6s}"
+        )
+        print("  " + "-" * 52)
         for _, row in results_df.iterrows():
             mae_str = f"{row['mae']:.4f}" if row["mae"] is not None else "N/A"
             rmse_str = f"{row['rmse']:.4f}" if row["rmse"] is not None else "N/A"
@@ -155,8 +182,9 @@ def evaluate_experiment(
                 if row["directional_acc"] is not None
                 else "N/A"
             )
+            sh_str = f"{row['sharpe']:.2f}" if row.get("sharpe") is not None else "N/A"
             print(
-                f"  {row['ticker']:8s} {mae_str:>8s} {rmse_str:>8s} {da_str:>8s} {row['n_predictions']:>6d}"
+                f"  {row['ticker']:8s} {mae_str:>8s} {rmse_str:>8s} {da_str:>8s} {sh_str:>8s} {row['n_predictions']:>6d}"
             )
         print()
 

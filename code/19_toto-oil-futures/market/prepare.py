@@ -68,6 +68,11 @@ def compute_features(conn) -> pd.DataFrame:
         g["returns"] = g["close"].pct_change()
         g["log_returns"] = np.log(g["close"] / g["close"].shift(1))
 
+        # Volatility-adjusted returns (de Prado): returns / rolling_std(returns)
+        # 20-day rolling vol is standard (~1 trading month)
+        rolling_vol = g["returns"].rolling(window=20, min_periods=10).std()
+        g["vol_adj_returns"] = g["returns"] / rolling_vol.replace(0, np.nan)
+
         # Rolling z-score normalization (60-day window)
         rolling_mean = g["close"].rolling(window=60, min_periods=10).mean()
         rolling_std = g["close"].rolling(window=60, min_periods=10).std()
@@ -82,6 +87,7 @@ def compute_features(conn) -> pd.DataFrame:
                     "close",
                     "returns",
                     "log_returns",
+                    "vol_adj_returns",
                     "normalized",
                     "volume",
                 ]

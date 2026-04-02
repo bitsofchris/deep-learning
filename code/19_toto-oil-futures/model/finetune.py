@@ -141,6 +141,7 @@ def run_finetune(
     fold: int | None = None,
     config_overrides: str | None = None,
     experiment_id: str | None = None,
+    target: str | None = None,
 ):
     """Run fine-tuning pipeline."""
     if config is None:
@@ -154,7 +155,8 @@ def run_finetune(
     from market.prepare import build_toto_dataset
 
     data_cfg = config["data"]
-    target_col = data_cfg["target"]
+    target_col = target or data_cfg["target"]
+    logger.info("Target column: %s", target_col)
     train_tickers = data_cfg["train_tickers"]
 
     CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
@@ -253,12 +255,18 @@ def main():
     parser.add_argument("--fold", type=int, help="CV fold to train on")
     parser.add_argument("--config", type=str, help="JSON config overrides")
     parser.add_argument("--experiment-id", type=str, help="Custom experiment ID")
+    parser.add_argument(
+        "--target",
+        type=str,
+        help="Target column override (returns, vol_adj_returns, log_returns)",
+    )
     args = parser.parse_args()
 
     run_finetune(
         fold=args.fold,
         config_overrides=args.config,
         experiment_id=args.experiment_id,
+        target=args.target,
     )
 
 

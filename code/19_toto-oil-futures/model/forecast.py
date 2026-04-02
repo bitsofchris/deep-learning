@@ -155,6 +155,7 @@ def run_forecasts(
     fold: int | None = None,
     experiment_id: str | None = None,
     notes: str | None = None,
+    target: str | None = None,
 ):
     """Run forecasts for specified tickers and fold, write results to DB."""
     if config is None:
@@ -164,7 +165,8 @@ def run_forecasts(
 
     model_cfg = config["model"]
     data_cfg = config["data"]
-    target_col = data_cfg["target"]
+    target_col = target or data_cfg["target"]
+    logger.info("Target column: %s", target_col)
     prediction_length = model_cfg["prediction_length"]
     num_samples = model_cfg["num_samples"]
     context_factor = model_cfg["context_factor"]
@@ -345,6 +347,11 @@ def main():
     parser.add_argument("--fold", type=int, help="Specific CV fold to evaluate")
     parser.add_argument("--experiment-id", type=str, help="Custom experiment ID")
     parser.add_argument("--notes", type=str, help="Experiment notes")
+    parser.add_argument(
+        "--target",
+        type=str,
+        help="Target column override (returns, vol_adj_returns, log_returns)",
+    )
     args = parser.parse_args()
 
     run_forecasts(
@@ -353,6 +360,7 @@ def main():
         fold=args.fold,
         experiment_id=args.experiment_id,
         notes=args.notes,
+        target=args.target,
     )
 
 

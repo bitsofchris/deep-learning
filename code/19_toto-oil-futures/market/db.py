@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS features (
     close           REAL,
     returns         REAL,
     log_returns     REAL,
+    vol_adj_returns REAL,
     normalized      REAL,
     volume          REAL,
     PRIMARY KEY (ticker, date)
@@ -100,6 +101,7 @@ CREATE TABLE IF NOT EXISTS evaluations (
     mae                 REAL,
     rmse                REAL,
     directional_acc     REAL,
+    sharpe              REAL,
     n_predictions       INTEGER,
     PRIMARY KEY (experiment_id, ticker, cv_fold)
 );
@@ -182,6 +184,7 @@ def insert_features(conn: sqlite3.Connection, df: pd.DataFrame):
             row.close,
             row.returns,
             row.log_returns,
+            row.vol_adj_returns,
             row.normalized,
             row.volume,
         )
@@ -189,8 +192,8 @@ def insert_features(conn: sqlite3.Connection, df: pd.DataFrame):
     ]
     conn.executemany(
         """INSERT OR REPLACE INTO features
-           (ticker, date, close, returns, log_returns, normalized, volume)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+           (ticker, date, close, returns, log_returns, vol_adj_returns, normalized, volume)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
         rows,
     )
     logger.info("Inserted %d feature rows", len(rows))
