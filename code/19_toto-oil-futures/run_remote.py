@@ -617,7 +617,9 @@ def cmd_forecast(args):
 def cmd_finetune(args):
     """Fine-tune Toto on RunPod, then forecast and evaluate."""
     ft_cmd = "python -m model.finetune"
-    fc_cmd = "python -m model.forecast --checkpoint checkpoints/best.pt"
+    fc_cmd = (
+        'python -m model.forecast --checkpoint "$(cat checkpoints/best_ckpt_path.txt)"'
+    )
     if args.fold is not None:
         ft_cmd += f" --fold {args.fold}"
         fc_cmd += f" --fold {args.fold}"
@@ -746,6 +748,175 @@ def cmd_terminate(args):
     terminate_pod(api_key, args.pod_id)
 
 
+# ---------------------------------------------------------------------------
+# Autoresearch commands — lightweight sync + run for persistent pods
+# ---------------------------------------------------------------------------
+
+
+def sync_files(pod_id: str, paths: list[str] | None = None):
+    """Upload changed files to an already-setup pod. Fast — no full setup.
+
+    By default syncs: autoresearch/, config.yaml, and all .py files in
+    market/, model/, eval/. Override with explicit paths list.
+    """
+    import paramiko
+
+    info = get_ssh_info(pod_id)
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(
+        info["ip"],
+        port=info["port"],
+        username="root",
+        key_filename=info["key_file"],
+    )
+    sftp = client.open_sftp()
+
+    if paths is None:
+        # Default: sync all code files
+        files_to_sync = []
+        for pattern in ["*.py", "*.yaml"]:
+            files_to_sync.extend(PROJECT_ROOT.glob(pattern))
+        for subdir in ["autoresearch", "market", "model", "eval"]:
+            subdir_path = PROJECT_ROOT / subdir
+            if subdir_path.exists():
+                for py_file in subdir_path.rglob("*.py"):
+                    files_to_sync.append(py_file)
+                for md_file in subdir_path.rglob("*.md"):
+                    files_to_sync.append(md_file)
+    else:
+        files_to_sync = [PROJECT_ROOT / p for p in paths if (PROJECT_ROOT / p).exists()]
+
+    synced = 0
+    for local_path in files_to_sync:
+        rel_path = local_path.relative_to(PROJECT_ROOT)
+        remote_path = f"{WORKSPACE}/{rel_path}"
+        remote_dir = str(Path(remote_path).parent)
+
+        # Ensure remote directory exists
+        _, stdout, _ = client.exec_command(f"mkdir -p {remote_dir}")
+        stdout.channel.recv_exit_status()
+
+        sftp.put(str(local_path), remote_path)
+        synced += 1
+
+    sftp.close()
+    client.close()
+    logger.info("Synced %d files to pod %s", synced, pod_id)
+    return synced
+
+
+def run_experiment_on_pod(pod_id: str, extra_args: str = "") -> str:
+    """Run autoresearch/train.py on the pod and capture output.
+
+    Returns the full stdout (agent parses the RESULT line from it).
+    """
+    import paramiko
+
+    info = get_ssh_info(pod_id)
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(
+        info["ip"],
+        port=info["port"],
+        username="root",
+        key_filename=info["key_file"],
+    )
+
+    cmd = (
+        f"cd {WORKSPACE} && "
+        f"export PATH=$HOME/.local/bin:$PATH && "
+        f"python -m autoresearch.train {extra_args} 2>&1"
+    )
+
+    logger.info("Running experiment on pod %s...", pod_id)
+    _, stdout, _ = client.exec_command(cmd, timeout=1800)  # 30 min max
+
+    # Stream output live while also capturing it
+    output_lines = []
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+        output_lines.append(line)
+
+    exit_code = stdout.channel.recv_exit_status()
+    client.close()
+
+    full_output = "".join(output_lines)
+
+    if exit_code != 0:
+        logger.error("Experiment exited with code %d", exit_code)
+
+    return full_output
+
+
+def download_db(pod_id: str, label: str = "autoresearch"):
+    """Download just the DB from the pod (lightweight, for merging results)."""
+    from runpod.cli.utils.ssh_cmd import SSHConnection
+
+    results_dir = PROJECT_ROOT / "results"
+    results_dir.mkdir(exist_ok=True)
+
+    remote_db = f"{WORKSPACE}/market/commodities.db"
+    local_db = results_dir / f"{label}.db"
+
+    with SSHConnection(pod_id) as ssh:
+        ssh.get_file(remote_db, str(local_db))
+
+    logger.info("Downloaded DB to %s", local_db)
+    return local_db
+
+
+def cmd_sync(args):
+    """Sync local code to a persistent pod."""
+    init_runpod(args.api_key)
+    n = sync_files(args.pod_id)
+    print(f"\nSynced {n} files to pod {args.pod_id}")
+
+
+def cmd_experiment(args):
+    """Sync code + run autoresearch experiment + download results.
+
+    This is the main autoresearch command. One invocation = one experiment.
+    """
+    init_runpod(args.api_key)
+
+    # Step 1: Sync code to pod
+    logger.info("Step 1/3: Syncing code to pod...")
+    sync_files(args.pod_id)
+
+    # Step 2: Run experiment
+    logger.info("Step 2/3: Running experiment...")
+    extra_args = []
+    if args.mode:
+        extra_args.append(f"--mode {args.mode}")
+    if args.experiment_id:
+        extra_args.append(f"--experiment-id {args.experiment_id}")
+    if args.target:
+        extra_args.append(f"--target {args.target}")
+    if args.learning_rate:
+        extra_args.append(f"--learning-rate {args.learning_rate}")
+    if args.context_factor:
+        extra_args.append(f"--context-factor {args.context_factor}")
+
+    output = run_experiment_on_pod(args.pod_id, " ".join(extra_args))
+
+    # Step 3: Download results DB
+    logger.info("Step 3/3: Downloading results...")
+    label = args.experiment_id or "autoresearch"
+    local_db = download_db(args.pod_id, label=label)
+
+    # Parse and echo the RESULT line
+    for line in output.splitlines():
+        if line.startswith("RESULT|"):
+            print(f"\n{'=' * 60}")
+            print(f"  {line}")
+            print(f"  Results DB: {local_db}")
+            print(f"  Merge: python -m eval.merge_results {local_db}")
+            print(f"  Leaderboard: python -m autoresearch.leaderboard")
+            print(f"{'=' * 60}")
+            break
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="RunPod orchestration for Toto training"
@@ -846,6 +1017,25 @@ def main():
     p_term = subparsers.add_parser("terminate", help="Terminate a pod")
     p_term.add_argument("--pod-id", type=str, required=True, help="Pod ID to terminate")
 
+    # --- Autoresearch commands ---
+
+    # sync — upload code to persistent pod
+    p_sync = subparsers.add_parser("sync", help="Sync local code to a persistent pod")
+    p_sync.add_argument("--pod-id", type=str, required=True, help="Pod ID")
+
+    # experiment — sync + run autoresearch/train.py + download results
+    p_exp = subparsers.add_parser(
+        "experiment", help="Run one autoresearch experiment (sync + run + download)"
+    )
+    p_exp.add_argument("--pod-id", type=str, required=True, help="Pod ID")
+    p_exp.add_argument(
+        "--mode", choices=["zeroshot", "finetune"], help="Experiment mode"
+    )
+    p_exp.add_argument("--experiment-id", type=str, help="Custom experiment ID")
+    p_exp.add_argument("--target", type=str, help="Target column override")
+    p_exp.add_argument("--learning-rate", type=float, help="Learning rate override")
+    p_exp.add_argument("--context-factor", type=int, help="Context factor override")
+
     args = parser.parse_args()
 
     commands = {
@@ -858,6 +1048,8 @@ def main():
         "download": cmd_download,
         "ssh": cmd_ssh,
         "terminate": cmd_terminate,
+        "sync": cmd_sync,
+        "experiment": cmd_experiment,
     }
     handler = commands.get(args.command)
     if handler:

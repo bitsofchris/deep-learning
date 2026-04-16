@@ -28,12 +28,12 @@ python run_remote.py finetune --fold 2
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Data (download + prepare) | **DONE** | 20 tickers, 118k rows, 3 purged CV folds |
-| Zero-shot baseline | **Code done, needs run** | `run_remote.py forecast` |
+| Zero-shot baseline | **DONE** | 51.1% directional accuracy (fold 2) |
 | Fine-tuning | **Code done, needs run** | `run_remote.py finetune` |
 | Demo notebook | Not started | `notebooks/` empty |
-| Autoresearch | Not started | Phase 5 |
+| Autoresearch | **DONE** | `autoresearch/` — train.py, leaderboard, program.md |
 
-**DB state:** `market/commodities.db` has raw_ohlcv (118,689), features (118,669), cv_folds (3 folds). Experiments/forecasts/evaluations are empty — no GPU runs yet.
+**DB state:** `market/commodities.db` has raw_ohlcv (118,689), features (118,669), cv_folds (3 folds), 2 completed experiments (zs_returns, zs_voladj).
 
 ---
 
@@ -121,6 +121,30 @@ python -m eval.evaluate --compare <id1> <id2>                     # side-by-side
 python -m eval.evaluate --experiment-id <id> --tickers CL=F NG=F  # specific tickers
 ```
 
+### Autoresearch (persistent pod, iterative experiments)
+
+```bash
+# 1. Create a persistent pod (note the pod ID)
+python run_remote.py create
+
+# 2. Run one experiment (sync code → run → download results)
+python run_remote.py experiment --pod-id <id>
+python run_remote.py experiment --pod-id <id> --mode finetune --target vol_adj_returns
+
+# 3. View results
+python -m autoresearch.leaderboard                         # ranked table
+python -m autoresearch.leaderboard --detail <experiment_id> # per-ticker breakdown
+python -m autoresearch.leaderboard --diff <id1> <id2>       # config + metric diff
+
+# 4. Sync code only (after editing train.py)
+python run_remote.py sync --pod-id <id>
+
+# 5. Terminate when done
+python run_remote.py terminate --pod-id <id>
+```
+
+The autoresearch agent edits `autoresearch/train.py` between experiments. See [program.md](../autoresearch/program.md) for the agent loop.
+
 ### Escape Hatches
 
 ```bash
@@ -198,6 +222,11 @@ If you Ctrl+C: training keeps running in tmux on the pod. Reconnect with `monito
 ├── eval/
 │   ├── evaluate.py          # Compute metrics, compare experiments
 │   └── merge_results.py     # Merge parallel pod results into local DB
+│
+├── autoresearch/
+│   ├── train.py             # Agent's canvas — the ONE file it modifies
+│   ├── program.md           # Agent instructions and constraints
+│   └── leaderboard.py       # Experiment tracking and progress viewer
 │
 ├── results/                 # Downloaded run logs + lightning logs
 ├── checkpoints/             # Model checkpoints (gitignored)

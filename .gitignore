@@ -1,15 +1,42 @@
+# Python
 env
 .venv
 *.pyc
+__pycache__/
 *.npy
+*.pkl
 *data/
-.vscode/
-.DS_Store
 *.env
-storage/
 *.log
 *lib/
+storage/
+*.db
+*.sqlite
+
+# Editors / OS
+.vscode/
+.DS_Store
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# Playwright
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Screenshots / images
+*.png
+
+# Data outputs
 *.json
+!**/package.json
+!**/package-lock.json
+!**/tsconfig.json
+!code/20_embedding-exploration/synthetic_sentences.json
+
 notes_network.html
 results/
 images/

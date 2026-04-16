@@ -60,12 +60,23 @@ def build_hf_dataset(series_list: list[dict], target_col: str):
     from datasets import Dataset
 
     # Each row in HF Dataset = one time series
+    # Toto's pipeline always processes ev_fields through np.concatenate,
+    # so we must provide at least one real column even when we have no
+    # exogenous variables. We use a zeros column as a dummy.
     rows = []
     for s in series_list:
+        n = len(s["timestamp"])
+        # Toto's transform_fev_dataset uses pd.infer_freq() on timestamps,
+        # which returns None for commodity data (holiday gaps break inference).
+        # Fix: use a synthetic business-day range of the same length.
+        # The actual dates don't affect training — only freq inference and start.
+        start = pd.Timestamp(s["timestamp"][0])
+        synthetic_timestamps = list(pd.bdate_range(start=start, periods=n))
         rows.append(
             {
-                "timestamp": s["timestamp"],
+                "timestamp": synthetic_timestamps,
                 target_col: s[target_col],
+                "_dummy_ev": [0.0] * n,
             }
         )
 
@@ -82,6 +93,8 @@ def build_hf_dataset(series_list: list[dict], target_col: str):
         "dataset": hf_dataset,
         "target_fields": [target_col],
         "target_transform_fns": [drop_nan_fn],
+        "ev_fields": ["_dummy_ev"],
+        "ev_transform_fns": [drop_nan_fn],
     }
 
     return custom_dataset
@@ -109,7 +122,7 @@ def build_toto_finetune_config(config: dict) -> dict:
             "num_workers": 0,
             "num_train_samples": 100,
             "add_exogenous_features": False,
-            "prediction_horizon": None,
+            "prediction_horizon": model_cfg["prediction_length"],
             "max_rows": 5000,
         },
         "trainer": {
@@ -236,6 +249,12 @@ def run_finetune(
     )
 
     logger.info("Best checkpoint: %s (val_loss=%.4f)", best_ckpt_path, best_val_loss)
+
+    # Write checkpoint path to a known location so forecast can find it
+    best_ckpt_pointer = CHECKPOINT_DIR / "best_ckpt_path.txt"
+    best_ckpt_pointer.parent.mkdir(parents=True, exist_ok=True)
+    best_ckpt_pointer.write_text(best_ckpt_path)
+    logger.info("Checkpoint path written to %s", best_ckpt_pointer)
 
     # Update experiment record
     with get_db() as conn:
