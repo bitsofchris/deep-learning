@@ -376,3 +376,49 @@ select option { background: #131622; }
 
 .dim-toggle { display: flex; align-items: center; gap: 4px; }
 
+/* ── UMAP cluster-quality metrics ────────────────────────────────────────── */
+
+.metrics-panel {
+  background: #131622;
+  border: 1px solid #1e2235;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.metrics-table th {
+  text-align: left;
+  padding: 6px 10px 6px 0;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #1e2235;
+  cursor: help;
+}
+.metrics-table td {
+  padding: 8px 10px 8px 0;
+  border-bottom: 1px solid #131622;
+}
+.metrics-table tr:last-child td { border-bottom: none; }
+.metrics-table .metric-tag {
+  color: #e2e8f0;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+.metrics-table .metric-muted { color: #64748b; }
+.metrics-table .metric-sub {
+  color: #64748b;
+  font-weight: 400;
+  margin-left: 6px;
+  font-size: 10px;
+}
+

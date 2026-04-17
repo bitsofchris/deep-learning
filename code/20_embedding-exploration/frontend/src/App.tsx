@@ -147,7 +147,11 @@ export default function App() {
           />
         )}
         {tab === 'Fingerprint' && (
-          <FingerprintChart selectedIds={selectedIds} />
+          <FingerprintChart
+            selectedIds={selectedIds}
+            tagColumns={tagColumns}
+            tagValues={tagValues}
+          />
         )}
         {tab === 'Diff' && (
           <DiffHeatmap selectedIds={selectedIds} />

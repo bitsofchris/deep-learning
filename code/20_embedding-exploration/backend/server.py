@@ -178,6 +178,72 @@ def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(an, bn))
 
 
+# ── Cluster-quality metrics (per tag column) ──────────────────────────────────
+
+
+def _knn_purity(X: np.ndarray, labels: list[str], k: int) -> float:
+    """For each point, fraction of its k nearest neighbours that share its label.
+    X is assumed L2-normalised → dot product = cosine similarity.
+    """
+    n = len(X)
+    if n <= k + 1:
+        return float("nan")
+    sim = X @ X.T
+    # Fill diagonal with -inf so self is never in top-k
+    np.fill_diagonal(sim, -np.inf)
+    top = np.argpartition(-sim, k, axis=1)[:, :k]
+    scores = np.fromiter(
+        (sum(1 for j in top[i] if labels[j] == labels[i]) / k for i in range(n)),
+        dtype=float,
+        count=n,
+    )
+    return float(scores.mean())
+
+
+def _silhouette_cosine(X: np.ndarray, labels: list[str]) -> float:
+    try:
+        from sklearn.metrics import silhouette_score  # type: ignore
+    except ImportError:
+        return float("nan")
+    try:
+        return float(silhouette_score(X, labels, metric="cosine"))
+    except ValueError:
+        return float("nan")
+
+
+def _compute_tag_metrics(items: list[dict], matrix: np.ndarray) -> dict:
+    """Compute kNN purity + silhouette per tag column with ≥2 distinct values.
+
+    Uses the truncated embedding space (`matrix`), not the UMAP projection.
+    Only items that actually have a tag value for the column are included.
+    """
+    result: dict[str, dict] = {}
+    for col in TAG_COLUMNS:
+        indices = [i for i, it in enumerate(items) if it["tags"].get(col)]
+        if len(indices) < 6:
+            continue
+        labels = [items[i]["tags"][col] for i in indices]
+        n_classes = len(set(labels))
+        if n_classes < 2:
+            continue
+        X = matrix[indices]
+        k = min(5, len(indices) - 1)
+        knn_p = _knn_purity(X, labels, k=k)
+        sil = _silhouette_cosine(X, labels)
+        # Chance baseline for kNN purity = 1/n_classes (balanced) — included so
+        # the frontend can show "lift over chance"
+        baseline = 1.0 / n_classes
+        result[col] = {
+            "knn_purity": round(knn_p, 4),
+            "knn_k": k,
+            "silhouette": round(sil, 4),
+            "chance_baseline": round(baseline, 4),
+            "n_classes": n_classes,
+            "n_points": len(indices),
+        }
+    return result
+
+
 # ── UMAP (cached, serialized) ───────────────────────────────────────────────────
 # compute_umap reused verbatim from
 # openaugi/experiments/knowledge-explorer/backend/server.py
@@ -434,6 +500,7 @@ def umap_endpoint(req: UmapRequest):
         raise HTTPException(400, f"Need ≥3 embeddings for UMAP, have {len(items)}")
     matrix = _truncate_normalize(np.stack([it["embedding"] for it in items]), req.dims)
     coords = _normalize_coords(compute_umap(matrix))
+    metrics = _compute_tag_metrics(items, matrix)
     return {
         "points": [
             {
@@ -447,6 +514,7 @@ def umap_endpoint(req: UmapRequest):
         ],
         "dims": req.dims,
         "count": len(items),
+        "metrics": metrics,
     }
 
 

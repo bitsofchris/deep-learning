@@ -4,7 +4,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { api } from '../api'
-import type { UmapPoint, TagFilters } from '../types'
+import type { UmapPoint, TagFilters, TagMetric } from '../types'
 
 const DIM_OPTIONS = [32, 128, 256, 512, 1024, 3072]
 const FALLBACK_COLORS = ['#6366f1', '#f43f5e', '#22c55e', '#f59e0b', '#06b6d4', '#a855f7', '#ec4899', '#10b981']
@@ -24,6 +24,38 @@ function colorForValue(value: string | undefined, index: number): string {
   return FALLBACK_COLORS[index % FALLBACK_COLORS.length]
 }
 
+/** Color a kNN purity cell: below chance → red, chance → muted, 1.0 → green. */
+function purityStyle(v: number, chance: number): React.CSSProperties {
+  if (!Number.isFinite(v)) return { color: '#64748b' }
+  // Normalize: chance → 0, 1.0 → 1. Below chance → negative.
+  const t = (v - chance) / Math.max(1e-9, 1 - chance)
+  if (t < -0.05) return { color: '#f87171', fontWeight: 600 }   // worse than chance
+  if (t < 0.15)  return { color: '#94a3b8' }                     // ≈ chance
+  if (t < 0.5)   return { color: '#fbbf24', fontWeight: 600 }    // moderate
+  if (t < 0.85)  return { color: '#4ade80', fontWeight: 700 }    // strong
+  return { color: '#22c55e', fontWeight: 700 }                    // excellent
+}
+
+/** Color a lift percentage 0..1 */
+function liftStyle(t: number): React.CSSProperties {
+  if (!Number.isFinite(t)) return { color: '#64748b' }
+  if (t < 0)   return { color: '#f87171', fontWeight: 600 }
+  if (t < 0.15) return { color: '#94a3b8' }
+  if (t < 0.5)  return { color: '#fbbf24', fontWeight: 600 }
+  if (t < 0.85) return { color: '#4ade80', fontWeight: 700 }
+  return { color: '#22c55e', fontWeight: 700 }
+}
+
+/** Silhouette ranges −1..1; usable signal is usually ~0.1+ */
+function silStyle(v: number): React.CSSProperties {
+  if (!Number.isFinite(v)) return { color: '#64748b' }
+  if (v < 0)    return { color: '#f87171', fontWeight: 600 }
+  if (v < 0.05) return { color: '#94a3b8' }
+  if (v < 0.2)  return { color: '#fbbf24', fontWeight: 600 }
+  if (v < 0.4)  return { color: '#4ade80', fontWeight: 700 }
+  return { color: '#22c55e', fontWeight: 700 }
+}
+
 interface Props {
   selectedIds: number[]
   filters: TagFilters
@@ -33,6 +65,7 @@ interface Props {
 
 export default function UmapScatter({ selectedIds, filters, tagColumns, tagValues }: Props) {
   const [points, setPoints] = useState<UmapPoint[]>([])
+  const [metrics, setMetrics] = useState<Record<string, TagMetric>>({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [computed, setComputed] = useState(false)
@@ -46,6 +79,7 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
     try {
       const r = await api.umap({ filters, dims })
       setPoints(r.points)
+      setMetrics(r.metrics ?? {})
       setComputed(true)
       setComputedDims(r.dims)
     } catch (e: unknown) {
@@ -131,6 +165,45 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
             {selectedIds.length > 0 && <>Selected items ringed in white. </>}
             Hover for full text.
           </div>
+
+          {/* Cluster-quality metrics */}
+          {Object.keys(metrics).length > 0 && (
+            <div className="metrics-panel">
+              <div className="section-label" style={{ marginBottom: 8 }}>
+                Cluster quality at {computedDims}d — computed on truncated embeddings, not UMAP coords
+              </div>
+              <table className="metrics-table">
+                <thead>
+                  <tr>
+                    <th>Tag</th>
+                    <th title={`Fraction of each point's k nearest neighbours that share its tag value`}>kNN purity</th>
+                    <th title="Random-chance baseline (1/n_classes)">Chance</th>
+                    <th title="Lift = (purity − chance) / (1 − chance) — 0 = no signal, 1 = perfect">Lift</th>
+                    <th title="Silhouette score (cosine metric): −1 = bad, 0 = ambiguous, +1 = tight clusters">Silhouette</th>
+                    <th>n</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(metrics).map(([col, m]) => {
+                    const lift = (m.knn_purity - m.chance_baseline) / Math.max(1e-9, 1 - m.chance_baseline)
+                    return (
+                      <tr key={col}>
+                        <td className="metric-tag">{col}</td>
+                        <td style={purityStyle(m.knn_purity, m.chance_baseline)}>
+                          {m.knn_purity.toFixed(3)}
+                          <span className="metric-sub">@k={m.knn_k}</span>
+                        </td>
+                        <td className="metric-muted">{m.chance_baseline.toFixed(3)}</td>
+                        <td style={liftStyle(lift)}>{(lift * 100).toFixed(0)}%</td>
+                        <td style={silStyle(m.silhouette)}>{m.silhouette.toFixed(3)}</td>
+                        <td className="metric-muted">{m.n_points}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Legend */}
           {legend.length > 0 && (

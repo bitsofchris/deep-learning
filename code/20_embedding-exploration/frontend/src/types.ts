@@ -22,10 +22,20 @@ export interface UmapPoint {
   y: number
 }
 
+export interface TagMetric {
+  knn_purity: number
+  knn_k: number
+  silhouette: number
+  chance_baseline: number
+  n_classes: number
+  n_points: number
+}
+
 export interface UmapResult {
   points: UmapPoint[]
   dims: number
   count: number
+  metrics: Record<string, TagMetric>
 }
 
 export interface CacheListResult {
