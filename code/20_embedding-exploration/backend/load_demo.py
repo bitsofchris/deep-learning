@@ -21,7 +21,7 @@ import numpy as np
 
 HERE = Path(__file__).parent
 DB_PATH = HERE / "embeddings.db"
-TAG_COLUMNS = ["gender", "class", "length"]
+TAG_COLUMNS = ["gender", "class", "length", "domain"]
 BATCH_SIZE = 100
 
 

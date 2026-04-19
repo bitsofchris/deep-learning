@@ -16,6 +16,10 @@ const TAG_COLORS: Record<string, string> = {
   common: '#94a3b8',
   short: '#34d399',
   long: '#a78bfa',
+  openaugi: '#818cf8',
+  tsai: '#f59e0b',
+  trading: '#22c55e',
+  health: '#f43f5e',
 }
 
 function colorForValue(value: string | undefined, index: number): string {

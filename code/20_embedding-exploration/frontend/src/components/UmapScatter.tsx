@@ -17,6 +17,10 @@ const TAG_COLORS: Record<string, string> = {
   common: '#94a3b8',
   short: '#34d399',
   long: '#a78bfa',
+  openaugi: '#818cf8',
+  tsai: '#f59e0b',
+  trading: '#22c55e',
+  health: '#f43f5e',
 }
 
 function colorForValue(value: string | undefined, index: number): string {
@@ -72,12 +76,20 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
   const [dims, setDims] = useState<number>(3072)
   const [colorBy, setColorBy] = useState<string>('')
   const [computedDims, setComputedDims] = useState<number>(0)
+  const [selectedOnly, setSelectedOnly] = useState(false)
+  const [showLabels, setShowLabels] = useState(false)
 
   const handleCompute = async () => {
     setLoading(true)
     setError('')
     try {
-      const r = await api.umap({ filters, dims })
+      const opts: { ids?: number[]; filters?: TagFilters; dims: number } = { dims }
+      if (selectedOnly && selectedIds.length > 0) {
+        opts.ids = selectedIds
+      } else {
+        opts.filters = filters
+      }
+      const r = await api.umap(opts)
       setPoints(r.points)
       setMetrics(r.metrics ?? {})
       setComputed(true)
@@ -89,12 +101,12 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
     }
   }
 
-  // Auto-recompute when dims or filters change AFTER first compute
+  // Auto-recompute when dims, filters, or scope change AFTER first compute
   useEffect(() => {
     if (!computed) return
     handleCompute()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dims, JSON.stringify(filters)])
+  }, [dims, selectedOnly, selectedOnly ? selectedIds.join(',') : JSON.stringify(filters)])
 
   // Group points by selected tag for coloring
   const legend = useMemo(() => {
@@ -123,6 +135,20 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
         <button className="btn btn-primary" onClick={handleCompute} disabled={loading}>
           {loading ? 'Computing…' : computed ? 'Recompute' : 'Compute UMAP'}
         </button>
+
+        <div className="flex-row">
+          <span className="section-label" style={{ margin: 0 }}>Scope</span>
+          <button
+            className={`chip${!selectedOnly ? ' active' : ''}`}
+            onClick={() => setSelectedOnly(false)}
+          >All</button>
+          <button
+            className={`chip${selectedOnly ? ' active' : ''}`}
+            onClick={() => setSelectedOnly(true)}
+            disabled={selectedIds.length < 3}
+            title={selectedIds.length < 3 ? 'Select at least 3 items in the Data tab' : `Project ${selectedIds.length} selected items`}
+          >Selected ({selectedIds.length})</button>
+        </div>
 
         <div className="dim-toggle">
           <span className="section-label" style={{ margin: 0, marginRight: 6 }}>Dims</span>
@@ -153,6 +179,19 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
             ))}
           </div>
         )}
+
+        <label style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          fontSize: 12, color: '#cbd5e1', cursor: 'pointer', userSelect: 'none',
+        }}>
+          <input
+            type="checkbox"
+            checked={showLabels}
+            onChange={e => setShowLabels(e.target.checked)}
+            style={{ accentColor: '#6366f1' }}
+          />
+          Labels
+        </label>
       </div>
 
       {loading && <div className="loading"><div className="spinner" />Running UMAP at {dims}d…</div>}
@@ -165,45 +204,6 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
             {selectedIds.length > 0 && <>Selected items ringed in white. </>}
             Hover for full text.
           </div>
-
-          {/* Cluster-quality metrics */}
-          {Object.keys(metrics).length > 0 && (
-            <div className="metrics-panel">
-              <div className="section-label" style={{ marginBottom: 8 }}>
-                Cluster quality at {computedDims}d — computed on truncated embeddings, not UMAP coords
-              </div>
-              <table className="metrics-table">
-                <thead>
-                  <tr>
-                    <th>Tag</th>
-                    <th title={`Fraction of each point's k nearest neighbours that share its tag value`}>kNN purity</th>
-                    <th title="Random-chance baseline (1/n_classes)">Chance</th>
-                    <th title="Lift = (purity − chance) / (1 − chance) — 0 = no signal, 1 = perfect">Lift</th>
-                    <th title="Silhouette score (cosine metric): −1 = bad, 0 = ambiguous, +1 = tight clusters">Silhouette</th>
-                    <th>n</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(metrics).map(([col, m]) => {
-                    const lift = (m.knn_purity - m.chance_baseline) / Math.max(1e-9, 1 - m.chance_baseline)
-                    return (
-                      <tr key={col}>
-                        <td className="metric-tag">{col}</td>
-                        <td style={purityStyle(m.knn_purity, m.chance_baseline)}>
-                          {m.knn_purity.toFixed(3)}
-                          <span className="metric-sub">@k={m.knn_k}</span>
-                        </td>
-                        <td className="metric-muted">{m.chance_baseline.toFixed(3)}</td>
-                        <td style={liftStyle(lift)}>{(lift * 100).toFixed(0)}%</td>
-                        <td style={silStyle(m.silhouette)}>{m.silhouette.toFixed(3)}</td>
-                        <td className="metric-muted">{m.n_points}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
 
           {/* Legend */}
           {legend.length > 0 && (
@@ -221,6 +221,8 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
             </div>
           )}
 
+          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
           <ResponsiveContainer width="100%" height={560}>
             <ScatterChart margin={{ top: 20, right: 40, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e2235" />
@@ -270,12 +272,67 @@ export default function UmapScatter({ selectedIds, filters, tagColumns, tagValue
                         fillOpacity={isSelected ? 1 : 0.75}
                         stroke={isSelected ? '#fff' : 'none'}
                         strokeWidth={1.5} />
+                      {showLabels && (
+                        <text
+                          x={cx + r + 4}
+                          y={cy - 2}
+                          fontSize={9}
+                          fill={isSelected ? '#e2e8f0' : '#64748b'}
+                          style={{ pointerEvents: 'none', userSelect: 'none' }}
+                        >
+                          {payload.text.slice(0, 40)}
+                        </text>
+                      )}
                     </g>
                   )
                 }}
               />
             </ScatterChart>
           </ResponsiveContainer>
+          </div>
+
+          {/* Cluster-quality metrics — right side */}
+          {Object.keys(metrics).length > 0 && (
+            <div className="metrics-panel" style={{ flexShrink: 0, maxWidth: 380 }}>
+              <div className="section-label" style={{ marginBottom: 8 }}>
+                Cluster quality at {computedDims}d
+              </div>
+              <div style={{ fontSize: 10, color: '#374151', marginBottom: 10 }}>
+                Computed on truncated embeddings, not UMAP coords
+              </div>
+              <table className="metrics-table">
+                <thead>
+                  <tr>
+                    <th>Tag</th>
+                    <th title={`Fraction of each point's k nearest neighbours that share its tag value`}>kNN purity</th>
+                    <th title="Random-chance baseline (1/n_classes)">Chance</th>
+                    <th title="Lift = (purity − chance) / (1 − chance) — 0 = no signal, 1 = perfect">Lift</th>
+                    <th title="Silhouette score (cosine metric): −1 = bad, 0 = ambiguous, +1 = tight clusters">Silhouette</th>
+                    <th>n</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(metrics).map(([col, m]) => {
+                    const lift = (m.knn_purity - m.chance_baseline) / Math.max(1e-9, 1 - m.chance_baseline)
+                    return (
+                      <tr key={col}>
+                        <td className="metric-tag">{col}</td>
+                        <td style={purityStyle(m.knn_purity, m.chance_baseline)}>
+                          {m.knn_purity.toFixed(3)}
+                          <span className="metric-sub">@k={m.knn_k}</span>
+                        </td>
+                        <td className="metric-muted">{m.chance_baseline.toFixed(3)}</td>
+                        <td style={liftStyle(lift)}>{(lift * 100).toFixed(0)}%</td>
+                        <td style={silStyle(m.silhouette)}>{m.silhouette.toFixed(3)}</td>
+                        <td className="metric-muted">{m.n_points}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          </div>
         </>
       )}
     </div>

@@ -43,7 +43,7 @@ DB_PATH = HERE / "embeddings.db"
 UMAP_CACHE_DIR = HERE / ".umap_cache"
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 MATRYOSHKA_DIMS = [256, 512, 1024, 2048, 3072]
-TAG_COLUMNS = ["gender", "class", "length"]
+TAG_COLUMNS = ["gender", "class", "length", "domain"]
 
 _umap_lock = threading.Lock()
 
