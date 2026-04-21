@@ -8,8 +8,10 @@ import DiffHeatmap from './components/DiffHeatmap'
 import SimilarityMatrix from './components/SimilarityMatrix'
 import MatryoshkaCurve from './components/MatryoshkaCurve'
 import UmapScatter from './components/UmapScatter'
+import PcaExplorer from './components/PcaExplorer'
+import DirectionsPanel from './components/DirectionsPanel'
 
-const TABS = ['Data', 'Fingerprint', 'Diff', 'Matrix', 'Matryoshka', 'UMAP'] as const
+const TABS = ['Data', 'Fingerprint', 'Diff', 'Matrix', 'Matryoshka', 'UMAP', 'PCA', 'Directions'] as const
 type Tab = typeof TABS[number]
 
 export default function App() {
@@ -168,6 +170,21 @@ export default function App() {
             filters={filters}
             tagColumns={tagColumns}
             tagValues={tagValues}
+          />
+        )}
+        {tab === 'PCA' && (
+          <PcaExplorer
+            selectedIds={selectedIds}
+            filters={filters}
+            tagColumns={tagColumns}
+            tagValues={tagValues}
+          />
+        )}
+        {tab === 'Directions' && (
+          <DirectionsPanel
+            tagColumns={tagColumns}
+            tagValues={tagValues}
+            filters={filters}
           />
         )}
       </main>

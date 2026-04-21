@@ -15,7 +15,7 @@ Opens at **http://localhost:5173**. Ctrl-C to stop both processes.
 
 **Requirements:** Python 3.11+, Node 18+, `OPENAI_API_KEY` in `keys.env` at the repo root.
 
-On first run `start.sh` installs Python deps (`fastapi uvicorn numpy openai umap-learn`) and runs `npm install` automatically.
+On first run `start.sh` installs Python deps (`fastapi uvicorn numpy openai scikit-learn umap-learn`) and runs `npm install` automatically.
 
 ---
 
@@ -81,6 +81,21 @@ Text input, embed button, and a scrollable items list. Below the input: **tag pi
 ### Matryoshka
 **Select exactly 2.** Cosine similarity at 256 → 512 → 1024 → 2048 → 3072 dimensions. Elbow annotation marks biggest drop.
 
+### PCA
+**Uses: all cached items (filtered by active filter bar), or the current selection.**
+
+Finds the directions of maximum variance in the embedding space, then lets you interpret each principal component by sorting items along it.
+
+Controls:
+- **Compute PCA** — fits on the filtered slice, caches to disk
+- **Scope** — `All` (respects filter bar) · `Selected` (use checked items)
+- **Dims** — Matryoshka truncation applied before PCA
+- **Components** — how many PCs to compute (default 10)
+
+After compute: a scree list shows explained variance per PC — click one to make it active. The ranked list below sorts every item by its score on the active PC. Configure sort direction and how many items to show. Toggle a tag column to see tag pills next to each item — if the ranking correlates with a tag, you've found an interpretable axis.
+
+Flow: compute → click PC1 → look at the extremes → name the axis mentally → next PC.
+
 ### UMAP
 **Uses: all cached items (filtered by active filter bar).**
 
@@ -124,7 +139,8 @@ keys.env → start.sh → backend (FastAPI :8000) + frontend (Vite :5173)
 │   ├── server.py                 # FastAPI — 9 endpoints
 │   ├── load_demo.py              # bulk-embed a labeled JSON file
 │   ├── embeddings.db             # single shared cache
-│   └── .umap_cache/              # pickle files keyed by matrix hash
+│   ├── .umap_cache/              # pickle files keyed by matrix hash
+│   └── .pca_cache/               # pickle files keyed by matrix hash + k
 └── frontend/
     └── src/
         ├── App.tsx               # tabs, filter bar, global state
@@ -138,6 +154,7 @@ keys.env → start.sh → backend (FastAPI :8000) + frontend (Vite :5173)
             ├── SimilarityMatrix.tsx
             ├── MatryoshkaCurve.tsx
             ├── UmapScatter.tsx   # dim toggle + color-by-tag
+            ├── PcaExplorer.tsx   # scree + ranked list per PC
             └── ArithmeticSandbox.tsx  # hidden — modern sentence embeddings
                                        # don't do clean A−B+C arithmetic
 ```

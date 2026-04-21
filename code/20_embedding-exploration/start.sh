@@ -21,9 +21,9 @@ fi
 echo "Starting backend on :8000"
 cd "$ROOT/backend"
 
-if ! python3 -c "import fastapi, uvicorn, numpy, openai" 2>/dev/null; then
+if ! python3 -c "import fastapi, uvicorn, numpy, openai, sklearn" 2>/dev/null; then
   echo "Installing backend deps..."
-  pip install fastapi uvicorn numpy openai
+  pip install fastapi uvicorn numpy openai scikit-learn
 fi
 
 if ! python3 -c "import umap" 2>/dev/null; then

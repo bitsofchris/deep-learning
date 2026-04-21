@@ -8,6 +8,12 @@ import type {
   TagValuesResult,
   TagFilters,
   Tags,
+  PcaResult,
+  Direction,
+  DirectionsListResult,
+  ProjectionResult,
+  AucScanResult,
+  DirectionMatryoshkaResult,
 } from './types'
 
 const BASE = '/api'
@@ -67,4 +73,36 @@ export const api = {
 
   arithmetic: (id_a: number, id_b: number, id_c: number): Promise<ArithmeticResult> =>
     post('/arithmetic', { id_a, id_b, id_c }),
+
+  pca: (opts: { ids?: number[]; filters?: TagFilters; dims?: number; n_components?: number }): Promise<PcaResult> =>
+    post('/pca', {
+      ids: opts.ids ?? null,
+      filters: opts.filters ?? null,
+      dims: opts.dims ?? 3072,
+      n_components: opts.n_components ?? 10,
+    }),
+
+  listDirections: (): Promise<DirectionsListResult> =>
+    get('/directions'),
+
+  createDirection: (body: { name: string; tag: string; value_a: string; value_b: string }): Promise<Direction> =>
+    post('/directions/create', body),
+
+  createRandomDirection: (body: { name: string; seed?: number }): Promise<Direction> =>
+    post('/directions/create-random', body),
+
+  deleteDirection: (id: number): Promise<void> =>
+    del(`/directions/${id}`),
+
+  projectDirection: (id: number, opts: { filters?: TagFilters; dims?: number }): Promise<ProjectionResult> =>
+    post(`/directions/${id}/project`, {
+      filters: opts.filters ?? null,
+      dims: opts.dims ?? 3072,
+    }),
+
+  aucScan: (body: { tag: string; value_a: string; value_b: string }): Promise<AucScanResult> =>
+    post('/directions/auc-scan', body),
+
+  directionMatryoshka: (body: { tag: string; value_a: string; value_b: string; dims?: number[] }): Promise<DirectionMatryoshkaResult> =>
+    post('/directions/matryoshka', body),
 }

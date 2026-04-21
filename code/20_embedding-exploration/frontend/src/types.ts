@@ -74,3 +74,80 @@ export interface ArithmeticResult {
 }
 
 export type TagFilters = Record<string, string[]>
+
+export interface PcaItem {
+  id: number
+  text: string
+  tags: Tags
+  scores: number[]
+}
+
+export interface PcaResult {
+  dims: number
+  n_components: number
+  count: number
+  explained_variance_ratio: number[]
+  items: PcaItem[]
+}
+
+export interface Direction {
+  id: number
+  name: string
+  tag: string | null
+  value_a: string | null
+  value_b: string | null
+  kind: 'mean_diff' | 'random'
+  n_a: number | null
+  n_b: number | null
+  created_at: string
+}
+
+export interface DirectionsListResult {
+  directions: Direction[]
+  cosines: number[][]
+}
+
+export interface ProjectionPoint {
+  id: number
+  text: string
+  tags: Tags
+  score: number
+}
+
+export interface ProjectionResult {
+  direction: Direction
+  dims: number
+  points: ProjectionPoint[]
+}
+
+export interface AucScanTop {
+  dim: number
+  auc: number
+  signal: number
+}
+
+export interface AucScanResult {
+  tag: string
+  value_a: string
+  value_b: string
+  n_a: number
+  n_b: number
+  auc: number[]
+  top: AucScanTop[]
+  max_abs_signal: number
+}
+
+export interface DirectionMatryoshkaPoint {
+  dim: number
+  auc: number
+  mean_gap: number
+}
+
+export interface DirectionMatryoshkaResult {
+  tag: string
+  value_a: string
+  value_b: string
+  n_a: number
+  n_b: number
+  points: DirectionMatryoshkaPoint[]
+}
