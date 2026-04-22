@@ -23,6 +23,7 @@ const TAG_COLORS: Record<string, string> = {
   common: '#94a3b8',
   short: '#34d399',
   long: '#a78bfa',
+  '(none)': '#475569',
 }
 
 function colorFor(value: string, i: number): string {
@@ -439,23 +440,30 @@ export default function DirectionsPanel({ tagColumns, tagValues, filters }: Prop
                   <Line type="monotone" dataKey="auc" stroke="#60a5fa" dot={false} strokeWidth={1} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
-              <div style={{ marginTop: 10 }}>
-                <div className="section-label">Top 10 dims</div>
-                <table className="diff-table" style={{ marginTop: 6 }}>
-                  <thead>
-                    <tr><th>Rank</th><th>Dim</th><th>AUC</th><th>|AUC − 0.5|</th></tr>
-                  </thead>
-                  <tbody>
-                    {aucResult.top.slice(0, 10).map((t, i) => (
-                      <tr key={t.dim}>
-                        <td style={{ color: '#64748b' }}>{i + 1}</td>
-                        <td style={{ color: '#818cf8' }}>{t.dim}</td>
-                        <td>{t.auc.toFixed(3)}</td>
-                        <td>{t.signal.toFixed(3)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div
+                style={{
+                  marginTop: 14,
+                  padding: '10px 12px',
+                  background: '#0f1120',
+                  borderLeft: '3px solid #6366f1',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  color: '#cbd5e1',
+                  lineHeight: 1.55,
+                }}
+              >
+                <div style={{ color: '#e5e7eb', fontWeight: 600, marginBottom: 4 }}>
+                  Distributed representation
+                </div>
+                No single dim cleanly classifies the concept — the AUC curve
+                hovers near 0.5, and the best single dim peaks well below 1.
+                But the projection histogram above (the dot product with a
+                learned direction) separates the classes near-perfectly. The
+                concept isn&apos;t stored in a dimension; it&apos;s stored on a
+                direction that recruits thousands of dimensions, each
+                contributing a small, coherent piece. This is the central trick
+                of neural representations — and arguably the core insight of
+                modern ML: meaning lives on directions, not coordinates.
               </div>
             </div>
           )}
