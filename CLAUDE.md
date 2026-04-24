@@ -27,6 +27,20 @@ Before running any Python.
 Activate the virtual environment: /Users/chris/repos/deep-learning/.venv
 
 
+## RunPod (GPU compute)
+
+When a project needs a GPU that can't run locally, use RunPod. The full reference implementation lives in `code/19_toto-oil-futures/run_remote.py` — read it before writing new orchestration code; it handles pod lifecycle, SSH, file sync, log tailing, and teardown. Agnostic tips:
+
+- **API key** lives in `keys.env` at the repo root as `RUN_POD_API_KEY_TOTO`. Always pipe it into env vars — never read it directly into chat output. Pattern: `set -a; source keys.env; set +a` then reference `$RUN_POD_API_KEY_TOTO`.
+- **SSH key** is the developer's `~/.ssh/id_ed25519`, added once to the RunPod account via Settings → SSH Keys. Do NOT try to inject public keys via `env.PUBLIC_KEY` per-pod — the base images don't populate authorized_keys from that, and overriding `dockerStartCmd` to do it manually also kills the image's own sshd startup.
+- **Proven image** for basic PyTorch work: `runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel`. Known to boot sshd correctly with account-level SSH keys. Prefer this before experimenting with newer tags.
+- **GPU availability is per-machine.** A `500: "This machine does not have the resources"` on pod create is transient — retry with a different GPU type or cloud. Iterate through a list: RTX 3090 → RTX 4090 → L4 → A40, community before secure.
+- **Readiness signal.** `desiredStatus: RUNNING` fires early; don't trust it. Wait until BOTH `runtime != null` AND an actual `ssh … "echo ok"` succeeds. Port mappings (`portMappings.22`) populate before the container is actually up.
+- **REST API base:** `https://rest.runpod.io/v1`. Full schema at `/openapi.json`. No `/gpuTypes` endpoint — valid GPU IDs come from the `PodCreateInput` schema enum.
+- **Teardown vs reuse.** Default to terminating pods when the task is done; if the user explicitly says "keep the pod up" (iterating), leave it and surface the pod ID so they can resume.
+- **For orchestration scripts**, prefer the Python SDK (`runpod` package) over raw REST — it handles SSH key discovery and proxy fallback cleanly. Raw REST is fine for one-off pod creation from a bash tool.
+
+
 ## Who You Are
 
 Senior staff engineer. You build software that is modular, extensible, simple, well tested, and reliable.

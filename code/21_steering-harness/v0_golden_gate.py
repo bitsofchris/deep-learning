@@ -34,10 +34,10 @@ from data.golden_gate_pairs import NEGATIVE, POSITIVE
 
 # -------- config --------
 MODEL_NAME = "google/gemma-2-2b"
-LAYER = 12  # residual stream hook site (of 26)
+LAYER = 18  # residual stream hook site (of 26)
 POS_STRATEGY = "last"  # "last" or "mean" — swap to compare
-ALPHAS = [0.0, 2.0, 5.0, 10.0, 15.0]
-TEST_PROMPT = "Tell me about your favorite place."
+ALPHAS = [0.0, 4.0, 6.0, 8.0, 10.0]
+TEST_PROMPT = "My favorite place in the whole world is"
 MAX_NEW_TOKENS = 80
 SEED = 0
 
