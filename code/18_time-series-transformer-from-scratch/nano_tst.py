@@ -397,10 +397,11 @@ class NanoTST(nn.Module):
 # print(f"Parameters: {n_params:,}")
 # train_model(model, data, epochs=50, lr=3e-4)
 
-# Step 7 - Grammar eval
-from ts_grammar_eval import train_with_grammar
+if __name__ == "__main__":
+    # Step 7 - Grammar eval
+    from ts_grammar_eval import train_with_grammar
 
-print("\n=== TRAINING WITH GRAMMAR TEST ===")
-data = generate_data(n_series=2000)
-model = NanoTST()
-train_with_grammar(model, data, epochs=100)
+    print("\n=== TRAINING WITH GRAMMAR TEST ===")
+    data = generate_data(n_series=2000)
+    model = NanoTST()
+    train_with_grammar(model, data, epochs=100)

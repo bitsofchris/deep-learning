@@ -14,6 +14,10 @@ Built on a plane as a learning exercise.
 | `docs/incremental-build.md` | Step-by-step build guide (the plan I followed) | Claude |
 | `docs/questions.md` | Every TODO comment I wrote, answered | Claude (answers to my questions) |
 | `docs/nano-tst-guide.md` | Architecture deep-dive, production model comparison | Claude |
+| `docs/interpretability-plan.md` | Labeled concepts, activation probes, ablations, and what they test | Codex |
+| `concept_data.py` | Synthetic data with true trend/frequency/noise/jump labels | Codex |
+| `interpretability.py` | Activation capture, probes, PCA, and ablation helpers | Codex |
+| `run_interpretability.py` | One-command interpretability experiment runner | Codex |
 | `youtube.md` | Video script for walking through this project | Both |
 | `later/` | Reference code for future steps (experiments, attention viz) | Claude |
 
