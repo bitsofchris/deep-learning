@@ -1,5 +1,7 @@
 # NanoTST — Time Series Transformer from Scratch
 
+MOVED TO: https://github.com/bitsofchris/nanoTST
+
 A ~300 line time series transformer built from nothing, one concept at a time. Same architecture as GPT — causal attention, feed-forward blocks, residual connections — but operating on continuous time series patches instead of word tokens. Predicts probability distributions (mu + sigma) over future values, not point estimates.
 
 Built on a plane as a learning exercise.
