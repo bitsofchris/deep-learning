@@ -17,6 +17,9 @@ storage/
 .vscode/
 .DS_Store
 
+# Jupyter
+.ipynb_checkpoints/
+
 # Node / frontend
 node_modules/
 dist/
