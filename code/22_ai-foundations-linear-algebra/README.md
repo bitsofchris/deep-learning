@@ -2,6 +2,25 @@
 
 Use one note per unit. Stay in the same note until the unit is done.
 
+## Recommended IDE: JupyterLab
+
+Use JupyterLab for the PyTorch exercises in this project. It gives you a Python notebook environment where you can type code, run cells one at a time, inspect tensor values and shapes inline, and keep your work saved per unit.
+
+From the repo root:
+
+```bash
+source .venv/bin/activate
+jupyter lab
+```
+
+Then open the notebooks in:
+
+```text
+code/22_ai-foundations-linear-algebra/notebooks/
+```
+
+Use one notebook per unit, matching the Markdown note for that unit.
+
 Each unit follows:
 
 1. Question
