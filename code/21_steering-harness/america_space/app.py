@@ -162,7 +162,7 @@ with gr.Blocks(css=CSS, title="AmericaAI") as demo:
             "you're talking to plain Gemma; crank it and the direction dominates until "
             "everything dissolves into star-spangled word salad.\n\n"
             "How the directions were found, and why this matters: "
-            "**[read the full write-up](https://bitsofchris.com/p/america-ai)**.\n\n"
+            "**[read the full write-up](https://bitsofchris.com/p/american-ai)**.\n\n"
             "One person made this in half a day, and it's crude. Imagine what teams "
             "of experts with billions in funding can do to steer the models you use "
             "every day."

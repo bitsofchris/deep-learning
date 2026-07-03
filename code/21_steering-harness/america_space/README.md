@@ -37,7 +37,7 @@ plain `transformers`.
 
 The vectors were found by mean-differencing paired contrastive sentences
 (patriotic vs. neutral completions of the same prompt). Full write-up:
-[America AI](https://bitsofchris.com/p/america-ai) on bitsofchris.com.
+[America AI](https://bitsofchris.com/p/american-ai) on bitsofchris.com.
 
 ## Disclaimer
 
