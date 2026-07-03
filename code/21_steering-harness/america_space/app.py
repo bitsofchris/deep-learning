@@ -52,11 +52,11 @@ ORDER = ["americana", "patriotic_pride", "trump_approval", "star_spangled_bombas
 # One knob: FREEDOM LEVEL 0-500 maps to a uniform multiplier (100 -> 1.0x,
 # the calibrated america_ai preset) across all four steering vectors.
 # Legend marks are QA'd against the live model every 50 (see harness
-# summary.md): 50-200 reads as plain Gemma, ~250 the first flags appear,
-# ~350 is overtly American but coherent, ~450 it runs off the rails,
-# 500 dissolves into star-spangled word salad. Default starts at 350
-# because the harness-calibrated 1.0x reads as barely-steered in chat.
-DEFAULT_FREEDOM = 350
+# summary.md): ~200 the first flags appear, ~390 is overtly American but
+# still coherent (the default), 500 dissolves into star-spangled word salad.
+# Default is well above the harness-calibrated 1.0x, which reads as
+# barely-steered in chat.
+DEFAULT_FREEDOM = 390
 
 
 @spaces.GPU(duration=90)
@@ -133,9 +133,8 @@ with gr.Blocks(css=CSS, title="AmericaAI") as demo:
         elem_id="freedom",
     )
     gr.Markdown(
-        "**0** 😐 Plain Gemma &nbsp;·&nbsp; **250** 🇺🇸 Hints of America &nbsp;·&nbsp; "
-        "**350** 🦅 America AI &nbsp;·&nbsp; **450** 🎆 Eagle Overdrive &nbsp;·&nbsp; "
-        "**500** 💥 Too Much Freedom",
+        "😐 **Normal model** &nbsp;·&nbsp; 🇺🇸 **Hints of America** &nbsp;·&nbsp; "
+        "🦅 **Max Freedom** &nbsp;·&nbsp; 🥴 **Star Drunk**",
         elem_id="legend",
     )
 
@@ -166,15 +165,14 @@ with gr.Blocks(css=CSS, title="AmericaAI") as demo:
             "**[read the full write-up](https://bitsofchris.com/p/america-ai)**.\n\n"
             "One person made this in half a day, and it's crude. Imagine what teams "
             "of experts with billions in funding can do to steer the models you use "
-            "every day — invisibly. That's why I made this: to show it's possible, "
-            "and how easy it is."
+            "every day."
         )
 
     gr.HTML(
         '<div id="disclaimer">America AI is an intentionally politically steered '
         "parody. Its responses are generated entertainment, not neutral or factual "
         "guidance. Built as an educational demo of how easily language models can "
-        "be invisibly steered.</div>"
+        "be steered.</div>"
     )
 
 demo.launch()

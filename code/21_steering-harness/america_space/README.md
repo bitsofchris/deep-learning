@@ -22,10 +22,9 @@ One **FREEDOM LEVEL** slider scales all four vectors, which are added
 directly to the model's residual stream at their layers during generation.
 No fine-tuning, no system prompt, no prompt tricks.
 
-- **0** = plain Gemma · **250** = hints of America (flags appear) ·
-  **350** = America AI (the default) · **450** = Eagle Overdrive (off the
-  rails) · **500** = Too Much Freedom (dissolves into star-spangled word
-  salad).
+- 😐 **Normal model** (0) · 🇺🇸 **Hints of America** (~200) ·
+  🦅 **Max Freedom** (~390, the default) · 🥴 **Star Drunk** (500, dissolves
+  into star-spangled word salad).
 
 ## How it works
 
