@@ -1,0 +1,11 @@
+# Environment for the dataloading notebooks (.venv-dataloading, Python 3.12).
+# Separate from the repo root .venv: torchdata 0.11 needs its own pin set, and
+# torch 2.2.2 is the last release with Intel-macOS wheels.
+torch==2.2.2
+torchdata==0.11.0
+numpy<2
+matplotlib==3.9.3
+ipykernel
+nbformat
+nbclient
+jupyter-client

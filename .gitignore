@@ -12,6 +12,7 @@ __pycache__/
 storage/
 *.db
 *.sqlite
+.venv-dataloading/
 
 # Editors / OS
 .vscode/

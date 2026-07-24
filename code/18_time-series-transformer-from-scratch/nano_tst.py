@@ -54,7 +54,7 @@ class LinearBaseline(nn.Module):
 def train_model(model, data, epochs=250, batch_size=32, lr=1e-3):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
-        perm = torch.randperm(len(data))  # TODO - what is this?
+        perm = torch.randperm(len(data))
         total_loss, n = 0, 0
         for i in range(0, len(data) - batch_size, batch_size):
             # Pass in one batch at a time
