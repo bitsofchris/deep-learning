@@ -54,7 +54,12 @@ you have them.
 > those. Don't show me any of that.
 >
 > Put the files in `code/23_zero-to-hero/NN_<lecture-name>/` in this repo,
-> following the layout of `01_micrograd/`.
+> following the layout of `01_micrograd/`: a unit note
+> (`unit_NN_<name>.md`, with Question / Cold Attempt / Consume / Practice /
+> Output / LLM Kickoff Prompt / Notes), a **notebook** where each milestone is
+> a cell of stubs followed by a `grade(...)` cell, a grader module exposing
+> `grade(...)` that stops at the first failure, and `HINTS.md`. The skeleton
+> is the notebook, not a `.py` file.
 
 ---
 

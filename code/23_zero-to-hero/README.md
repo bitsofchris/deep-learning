@@ -1,13 +1,19 @@
 # Zero to Hero — Karpathy's neural networks playlist, rebuilt from scratch
 
-**What:** One folder per lecture of the
+One folder per lecture of the
 [Neural Networks: Zero to Hero](https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ)
-playlist. Each folder is a *from-scratch exercise*: a skeleton with
-`raise NotImplementedError` stubs, a grader that stops at the first failure,
-and a tiered hints file. Boilerplate is given; the ideas are left for me.
+playlist. Watching is not learning; each lecture becomes a from-scratch exercise
+with a grader in front of me.
 
-**Why:** Watching is not learning. Re-deriving each lecture's core idea with
-a grader in front of me is the only way it sticks.
+## Launch
+
+From this folder, copy-paste:
+
+```bash
+../../.venv/bin/jupyter lab --notebook-dir=.
+```
+
+Or from anywhere in the repo, `./nb code/23_zero-to-hero/01_micrograd`.
 
 ## Lectures
 
@@ -22,36 +28,41 @@ a grader in front of me is the only way it sticks.
 | 7 | GPT from scratch | `07_gpt/` | todo |
 | 8 | GPT tokenizer | `08_tokenizer/` | todo |
 
-## Workflow per lecture
+## The loop (borrowed from `22_ai-foundations-linear-algebra`)
 
-1. Watch the lecture (or a section of it).
-2. **Write a recall paragraph from memory before rewatching anything.** Put it
-   in `NN_<lecture>/RECALL.md`.
-3. Paste `PROMPT.md` into a fresh chat with the recall paragraph filled in.
-   It produces `<name>.py` (skeleton), `test_<name>.py` (grader), `HINTS.md`.
-4. Work the milestones. Before each grader run, say out loud what you expect.
-5. Stuck on an *idea* for 20 min → read one hint tier, or ask in chat.
-   Stuck on *Python syntax* → ask immediately.
-6. When the grader passes end to end, write a few lines in `RECALL.md` about
-   what surprised you. That gap is the lesson.
+Each lecture folder has one **unit note** (`unit_NN_<name>.md`) and one
+**notebook**. The note has seven sections, in order:
 
-## Running things
+1. **Question** — the single question the lecture answers.
+2. **Cold Attempt** — answer 5–6 questions from memory *before* watching. Vague answers are the gaps.
+3. **Consume** — the lecture, split into sections, with a stop after each.
+4. **Practice** — the notebook: stubs per milestone, grader cell after each, stops at first failure.
+5. **Output** — something shippable: a section in the notebook plus a paragraph of what surprised you.
+6. **LLM Kickoff Prompt** — paste into a new chat. It quizzes you *before* it teaches, then coaches on hints only.
+7. **Notes** — running notes. Stay in the same note across days.
 
-```bash
-# from the repo root
-source .venv/bin/activate
-python code/23_zero-to-hero/01_micrograd/test_micrograd.py
+Hints live in `HINTS.md`, tiered, one idea per tier. Read one tier at a time.
+
+## Files per lecture
+
+```
+NN_<name>/
+  unit_NN_<name>.md     the note above; start here
+  <name>.ipynb          the exercise; a cell of stubs, then a grade(...) cell, per milestone
+  test_<name>.py        the grader; from test_<name> import grade
+  HINTS.md              tiered hints, never inlined in the notebook
 ```
 
-For tinkering in a notebook, use the launcher in the repo root:
+## Starting the next lecture
 
-```bash
-./nb code/23_zero-to-hero/01_micrograd     # opens Jupyter Lab in that folder
-./nb                                       # opens Jupyter Lab at the repo root
-```
+`PROMPT.md` is the prompt that generates a new lecture folder in this layout.
+Fill in the four brackets, including your own cold-attempt paragraph, and paste
+it into a fresh chat. It asks the model to verify its own grader against a
+private reference before shipping.
 
-## Rules of engagement
+## Rules
 
 - Don't open the lecture while coding. Don't open the real repo.
-- The grader is the source of truth. One failing test at a time.
-- Predict before you run.
+- The grader is the source of truth. One failing milestone at a time.
+- Predict out loud before every grader run.
+- Stuck on an *idea* for 20 min → one hint tier, or ask. Stuck on *syntax* → ask immediately.

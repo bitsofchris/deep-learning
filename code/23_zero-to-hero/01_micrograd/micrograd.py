@@ -1,6 +1,9 @@
 """
 micrograd, from scratch.
 
+OPTIONAL .py route. The main exercise is micrograd.ipynb; this file is the
+same stubs if you would rather work in an editor.
+
 Fill in every `raise NotImplementedError`. Run `python test_micrograd.py`
 after each one. The grader stops at your first failure so there is always
 exactly one thing in front of you.

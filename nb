@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Launch Jupyter Lab from this repo's venv, in a given folder (default: repo root).
+#   ./nb                                   -> repo root
+#   ./nb code/23_zero-to-hero/01_micrograd -> that folder
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIR="${1:-$ROOT}"
+[[ "$DIR" = /* ]] || DIR="$ROOT/$DIR"
+[[ -d "$DIR" ]] || { echo "no such directory: $DIR" >&2; exit 1; }
+exec "$ROOT/.venv/bin/jupyter" lab --notebook-dir="$DIR" "${@:2}"

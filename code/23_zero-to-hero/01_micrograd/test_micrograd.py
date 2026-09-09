@@ -1,8 +1,10 @@
 """
-Grader for micrograd.py. No pytest. Run: python test_micrograd.py
+Grader for micrograd. No pytest.
+
+From the notebook:   from test_micrograd import grade; grade(Value, upto=2)
+From the shell:      python test_micrograd.py [milestone]   (grades micrograd.py)
 
 Milestones run in order and the grader stops at the first failure.
-Pass a milestone number to run only up to it:  python test_micrograd.py 3
 """
 
 import math
@@ -10,7 +12,8 @@ import random
 import sys
 import traceback
 
-from micrograd import Value, Neuron, Layer, MLP
+# Filled in by grade(...) so the notebook can hand over its own classes.
+Value = Neuron = Layer = MLP = None
 
 
 # ----------------------------------------------------------------------------
@@ -478,8 +481,15 @@ MILESTONES = [
 ]
 
 
-def main():
-    upto = int(sys.argv[1]) if len(sys.argv) > 1 else 99
+def grade(value_cls, neuron_cls=None, layer_cls=None, mlp_cls=None, upto=99):
+    """Run milestones in order, stopping at the first failure.
+
+    From a notebook:   grade(Value, Neuron, Layer, MLP)
+                       grade(Value, upto=3)   # only the first three
+    Returns 0 on all-pass, 1 otherwise.
+    """
+    global Value, Neuron, Layer, MLP
+    Value, Neuron, Layer, MLP = value_cls, neuron_cls, layer_cls, mlp_cls
     for num, title, fn in MILESTONES:
         if num > upto:
             break
@@ -493,13 +503,33 @@ def main():
             print(f"\n[TODO] milestone {num}: {title}")
             print("    hit a NotImplementedError -- this is the next thing to write.\n")
             return 1
+        except TypeError as e:
+            if "NoneType" in str(e):
+                print(f"\n[TODO] milestone {num}: {title}")
+                print(
+                    "    class not passed to grade() yet -- hand it over once it exists.\n"
+                )
+                return 1
+            traceback.print_exc()
+            return 1
         except Exception:
             print(f"\n[ERROR] milestone {num}: {title}\n")
             traceback.print_exc()
             return 1
+
         print(f"[ok]   milestone {num}: {title}")
     print("\nall milestones passed.")
     return 0
+
+
+def main():
+    """CLI route: grade micrograd.py in this folder."""
+    import micrograd
+
+    upto = int(sys.argv[1]) if len(sys.argv) > 1 else 99
+    return grade(
+        micrograd.Value, micrograd.Neuron, micrograd.Layer, micrograd.MLP, upto=upto
+    )
 
 
 if __name__ == "__main__":
