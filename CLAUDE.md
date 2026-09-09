@@ -18,6 +18,7 @@ Each experiment is contained in its own subfolder under `code/`:
 - `code/10_fourier_transforms/` - Fourier analysis on time series data
 - `code/11_pytorch-time-series/` - PyTorch time series data loading
 - `code/12_time-series-fusion-model/` - Advanced time series fusion models
+- `code/23_zero-to-hero/` - Karpathy Zero to Hero playlist, one from-scratch exercise per lecture (skeleton + grader + tiered hints). See its README for the per-lecture workflow and `PROMPT.md` for generating the next lecture's exercise.
 
 ## Common Development Commands
 
