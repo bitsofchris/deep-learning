@@ -17,16 +17,23 @@ Or from anywhere in the repo, `./nb code/23_zero-to-hero/01_micrograd`.
 
 ## Lectures
 
-| # | Lecture | Folder | Status |
-|---|---------|--------|--------|
-| 1 | micrograd — backprop and autograd | `01_micrograd/` | in progress |
-| 2 | makemore 1 — bigram model | `02_makemore_bigram/` | todo |
-| 3 | makemore 2 — MLP | `03_makemore_mlp/` | todo |
-| 4 | makemore 3 — activations, gradients, BatchNorm | `04_makemore_batchnorm/` | todo |
-| 5 | makemore 4 — becoming a backprop ninja | `05_makemore_backprop_ninja/` | todo |
-| 6 | makemore 5 — WaveNet | `06_makemore_wavenet/` | todo |
-| 7 | GPT from scratch | `07_gpt/` | todo |
-| 8 | GPT tokenizer | `08_tokenizer/` | todo |
+Playlist order. Each folder has a unit note, a notebook of stubs with a grader
+cell per milestone, and the grader module.
+
+| # | Video | Folder | Status |
+|---|-------|--------|--------|
+| 1 | The spelled-out intro to neural networks and backpropagation: building micrograd | `01_micrograd/` | done, in review |
+| 2 | The spelled-out intro to language modeling: building makemore | `02_makemore_bigram/` | scaffolded |
+| 3 | Building makemore Part 2: MLP | `03_makemore_mlp/` | scaffolded |
+| 4 | Building makemore Part 3: Activations & Gradients, BatchNorm | `04_makemore_batchnorm/` | scaffolded |
+| 5 | Building makemore Part 4: Becoming a Backprop Ninja | `05_makemore_backprop_ninja/` | scaffolded |
+| 6 | Building makemore Part 5: Building a WaveNet | `06_makemore_wavenet/` | scaffolded |
+| 7 | Let's build GPT: from scratch, in code, spelled out. | `07_gpt/` | scaffolded |
+| 8 | State of GPT (talk, watch-only) | `08_state_of_gpt/` | note only |
+| 9 | Let's build the GPT Tokenizer | `09_tokenizer/` | scaffolded |
+| 10 | Let's reproduce GPT-2 (124M) (densest components only) | `10_gpt2_reproduce/` | scaffolded |
+
+Shared data in `data/`: `names.txt` (makemore) and `tinyshakespeare.txt` (GPT).
 
 ## The loop (borrowed from `22_ai-foundations-linear-algebra`)
 
@@ -37,11 +44,12 @@ Each lecture folder has one **unit note** (`unit_NN_<name>.md`) and one
 2. **Cold Attempt** — answer 5–6 questions from memory *before* watching. Vague answers are the gaps.
 3. **Consume** — the lecture, split into sections, with a stop after each.
 4. **Practice** — the notebook: stubs per milestone, grader cell after each, stops at first failure.
-5. **Output** — something shippable: a section in the notebook plus a paragraph of what surprised you.
-6. **LLM Kickoff Prompt** — paste into a new chat. It quizzes you *before* it teaches, then coaches on hints only.
-7. **Notes** — running notes. Stay in the same note across days.
+5. **Review** — three spaced retrieval quizzes from memory, checked against the Coaching log.
+6. **Output** — something shippable: a section in the notebook plus a paragraph of what surprised you.
+7. **LLM Kickoff Prompt** — paste into a new chat. It quizzes you *before* it teaches, then coaches on hints only.
+8. **Notes** — running notes. Stay in the same note across days.
 
-Hints live in `HINTS.md`, tiered, one idea per tier. Read one tier at a time.
+Hints come from the coaching chat, one tier at a time, only when asked. No hints file.
 
 ## Files per lecture
 
@@ -49,20 +57,25 @@ Hints live in `HINTS.md`, tiered, one idea per tier. Read one tier at a time.
 NN_<name>/
   unit_NN_<name>.md     the note above; start here
   <name>.ipynb          the exercise; a cell of stubs, then a grade(...) cell, per milestone
-  test_<name>.py        the grader; from test_<name> import grade
-  HINTS.md              tiered hints, never inlined in the notebook
+  test_<name>.py        the grader; from test_<name> import grade(..., upto=, skip=)
+  quiz_NN_<name>.md     spaced-retrieval quiz at +1d, +4d, +2w; dates filled when the unit ends
 ```
+
+The unit note's Notes section carries a **Coaching log** (one bullet per idea,
+written only after you've said it back correctly) and a `**Paused <date>.**`
+line for resuming mid-unit.
 
 ## Starting the next lecture
 
-`PROMPT.md` is the prompt that generates a new lecture folder in this layout.
-Fill in the four brackets, including your own cold-attempt paragraph, and paste
-it into a fresh chat. It asks the model to verify its own grader against a
-private reference before shipping.
+Watch it, write a 3–8 sentence recall paragraph from memory, then paste
+`PROMPT.md` (brackets filled) into Claude Code opened at the repo root. It
+builds the next folder in this layout and verifies its own grader before
+handing it over. Then answer the Cold Attempt in the new unit note, paste its
+kickoff prompt into a fresh chat, and launch the notebook.
 
 ## Rules
 
 - Don't open the lecture while coding. Don't open the real repo.
 - The grader is the source of truth. One failing milestone at a time.
 - Predict out loud before every grader run.
-- Stuck on an *idea* for 20 min → one hint tier, or ask. Stuck on *syntax* → ask immediately.
+- Stuck on an *idea* for 20 min → ask the coaching chat for a hint. Stuck on *syntax* → ask immediately.
