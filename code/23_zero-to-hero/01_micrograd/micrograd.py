@@ -10,7 +10,7 @@ exactly one thing in front of you.
 
 Rules of engagement:
   - Don't open the lecture. Don't open the real micrograd repo.
-  - Stuck on an IDEA for 20 min -> read one tier of HINTS.md, or ask.
+  - Stuck on an IDEA for 20 min -> ask the coaching chat for a hint.
   - Stuck on PYTHON SYNTAX -> ask immediately, zero learning value in that.
   - Before you run the tests, say out loud what you expect to happen.
 """

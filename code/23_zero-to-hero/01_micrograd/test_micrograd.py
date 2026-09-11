@@ -25,9 +25,30 @@ class Fail(Exception):
     pass
 
 
+_passed = []  # checks passed so far within the current milestone
+
+
 def check(cond, msg):
     if not cond:
         raise Fail(msg)
+    _passed.append(msg)
+
+
+def _where(exc):
+    """'Neuron.__call__' for the innermost frame that raised exc."""
+    tb = exc.__traceback__
+    while tb.tb_next:
+        tb = tb.tb_next
+    code = tb.tb_frame.f_code
+    return getattr(code, "co_qualname", code.co_name)
+
+
+def _progress():
+    if _passed:
+        print(
+            f"    {len(_passed)} check(s) in this milestone passed before that. "
+            f"Most recent one guarded against: {_passed[-1]!r}"
+        )
 
 
 def close(a, b, tol=1e-6):
@@ -481,11 +502,12 @@ MILESTONES = [
 ]
 
 
-def grade(value_cls, neuron_cls=None, layer_cls=None, mlp_cls=None, upto=99):
+def grade(value_cls, neuron_cls=None, layer_cls=None, mlp_cls=None, upto=99, skip=()):
     """Run milestones in order, stopping at the first failure.
 
     From a notebook:   grade(Value, Neuron, Layer, MLP)
                        grade(Value, upto=3)   # only the first three
+                       grade(Value, Neuron, Layer, MLP, skip=(6,))   # skip a stretch milestone
     Returns 0 on all-pass, 1 otherwise.
     """
     global Value, Neuron, Layer, MLP
@@ -493,15 +515,23 @@ def grade(value_cls, neuron_cls=None, layer_cls=None, mlp_cls=None, upto=99):
     for num, title, fn in MILESTONES:
         if num > upto:
             break
+        if num in skip:
+            print(f"[skip] milestone {num}: {title}")
+            continue
+        _passed.clear()
         try:
             fn()
         except Fail as e:
             print(f"\n[FAIL] milestone {num}: {title}\n")
             print(f"    {e}\n")
             return 1
-        except NotImplementedError:
+        except NotImplementedError as e:
             print(f"\n[TODO] milestone {num}: {title}")
-            print("    hit a NotImplementedError -- this is the next thing to write.\n")
+            print(
+                f"    {_where(e)} raised NotImplementedError -- this is the next thing to write."
+            )
+            _progress()
+            print()
             return 1
         except TypeError as e:
             if "NoneType" in str(e):

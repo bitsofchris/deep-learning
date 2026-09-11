@@ -42,7 +42,11 @@ Answer before watching (or before rewatching). Vague answers are the gaps.
 | 7 | *stretch:* Neuron / Layer / MLP, and it learns | 4 |
 
 Rules: no lecture open while coding, no real micrograd repo. Predict before every grader run.
-Stuck on an idea for 20 min → one tier of `HINTS.md`. Stuck on syntax → ask.
+Stuck on an idea for 20 min → ask the coaching chat for a hint. Stuck on syntax → ask.
+
+## Review
+
+`quiz_01_micrograd.md`: three retrieval quizzes at +1d, +4d, +2w. From memory, then check the Coaching log.
 
 ## Output
 
@@ -56,8 +60,8 @@ Paste into a new chat when starting this unit. It is a Socratic pre-check first 
 ```text
 I am working through Karpathy's Neural Networks: Zero to Hero. Right now I am on
 lecture 1, micrograd. The folder code/23_zero-to-hero/01_micrograd/ in this repo
-already contains a notebook exercise (micrograd.ipynb), a grader
-(test_micrograd.py), and tiered hints (HINTS.md). Do not rebuild any of that.
+already contains a notebook exercise (micrograd.ipynb) and a grader
+(test_micrograd.py). Do not rebuild any of that.
 
 The core question for this unit is: how does a number learn which direction to move?
 
@@ -78,7 +82,8 @@ After I answer, do three things:
 
 Then switch to coaching mode for the notebook. Rules for that mode:
 - Don't explain. If I'm stuck I'll tell you what I tried and what I expected;
-  give me the next hint tier from HINTS.md only, and only the one I need.
+  give me ONE hint, tiered: first a question, then the shape of the idea, and
+  only something close to the answer if I ask a third time. One tier per ask.
 - Before I run a grader cell for the first time on a milestone, ask me to
   predict what it will print.
 - If I ask a Python syntax question, just answer it.
@@ -88,3 +93,18 @@ Then switch to coaching mode for the notebook. Rules for that mode:
 
 ## Notes
 
+
+### Coaching log (things I worked out from my own questions)
+
+- `_prev` is the set of inputs to the op that produced this node. `__add__`/`__mul__` must pass `(self, other)` as `_children`, not just `(other,)`, or `dump` shows one input and gradient has nowhere to go.
+- For `c = a * b`, nudging `a` by `h` moves `c` by `b * h`, so the local derivative is the *other operand*. For `c = a + b` it moves by `h`, so the local derivative is 1.
+- `c._backward` has to be built inside `__mul__` / `__add__`, because that method is the only place that knows `c` came from `a` and `b`. It is a closure over `self`, `other`, `out`, so it takes no arguments.
+- The last node in the graph gets `grad = 1.0` because it *is* `L`, and `dL/dL = 1`. That is set when backprop starts, not in `__init__` (which starts every grad at 0).
+- Inside `__mul__`, `self` is the left operand (`a`), `other` is `b`, `out` is `c`. So `c._backward()` writes into `self.grad` and `other.grad`, which are the *children*, never into `c.grad` (already finished by then).
+- The combining rule is always `child.grad += local_derivative * out.grad`. Only the local derivative changes per op: `other.data` for `*`, `1` for `+` (so `+` just passes `out.grad` through). I first wrote `out.grad + other.data` for addition, mixing up the combining op with the local derivative.
+- Order for `backward()`: a node may run its `_backward` only after every node that *consumes* it (has it in `_prev`) has run. Those consumers are what write into its grad; until they're done its grad is still 0 or partial. "Reverse topological order" is just the name for a list with that property. Built with a DFS that recurses into `_prev` first and appends the node after, then walked reversed.
+- Milestones 3 and 4 pass. `+=` in the closures already handled the accumulation case.
+- tanh: local derivative is `1 - tanh(x)^2`, and `tanh(x)` is already `out.data`. I squared `self.data` (the input) instead of `out.data` (the output). One child, so one line in the closure.
+- Neuron: `nin` weights plus a bias, all `Value`s, all in `parameters()` (bias gets nudged too). `__call__` is `tanh(sum(w*x) + b)` using Value ops. Wrapping the result in `Value(...)` creates a new leaf and cuts the graph, so backward never reaches the weights. Without the tanh a stack of neurons is still linear.
+- Layer: `nout` neurons each seeing the same `x`. Calling it returns their activations as a list, or the bare Value when there's one neuron. The `if` lives only in Layer, since Neuron always returns one Value and MLP just returns what its last layer returns.
+- MLP: `sizes = [nin] + nouts`, one `Layer(sizes[i], sizes[i+1])` per consecutive pair. Calling it is a loop that replaces `x` with `layer(x)`. `MLP(3,[4,4,1])` has 41 params. Milestone 7 passes.
