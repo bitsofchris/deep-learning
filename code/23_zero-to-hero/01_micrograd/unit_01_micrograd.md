@@ -46,7 +46,7 @@ Stuck on an idea for 20 min → ask the coaching chat for a hint. Stuck on synta
 
 ## Review
 
-`quiz_01_micrograd.md`: three retrieval quizzes at +1d, +4d, +2w. From memory, then check the Coaching log.
+`quiz_01_micrograd.md`: three retrieval quizzes at +1d, +4d, +2w. From memory, then check the Coaching log. Reviews are scheduled in the vault note `Quiz Schedule - Foundations` (the OpenAugi board puts a due review on that day's board); run one with Prompt B in `../PROMPT.md`.
 
 ## Output
 

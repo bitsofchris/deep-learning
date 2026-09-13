@@ -57,7 +57,7 @@ Stuck on an idea for 20 min → ask the coaching chat for a hint. Stuck on synta
 
 ## Review
 
-`quiz_05_makemore_backprop_ninja.md`: three retrieval quizzes at +1d, +4d, +2w. From memory, then check the Coaching log.
+`quiz_05_makemore_backprop_ninja.md`: three retrieval quizzes at +1d, +4d, +2w. From memory, then check the Coaching log. Reviews are scheduled in the vault note `Quiz Schedule - Foundations` (the OpenAugi board puts a due review on that day's board); run one with Prompt B in `../PROMPT.md`.
 
 ## Output
 
@@ -118,6 +118,10 @@ Then switch to coaching mode for the notebook. Rules for that mode:
 When the unit finishes: fill in the three review dates in
 quiz_05_makemore_backprop_ninja.md (+1 day, +4 days, +2 weeks from today) and
 rewrite its questions so they target the gaps that showed up in the Coaching log.
+Then append three rows to the OpenAugi quiz schedule, the vault note
+~/Documents/ZK Home/_private/3-MOCs and Projects/Quiz Schedule - Foundations.md
+(unit 05, quiz path, review 1/2/3, due +1d/+4d/+14d from today) so the daily
+board fires each review.
 ```
 
 ## Notes

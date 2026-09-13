@@ -29,7 +29,7 @@ No notebook. Instead, in Notes:
 
 ## Review
 
-`quiz_08_state_of_gpt.md`: three retrieval quizzes at +1d, +4d, +2w. From memory, then check the Coaching log.
+`quiz_08_state_of_gpt.md`: three retrieval quizzes at +1d, +4d, +2w. From memory, then check the Coaching log. Reviews are scheduled in the vault note `Quiz Schedule - Foundations` (the OpenAugi board puts a due review on that day's board); run one with Prompt B in `../PROMPT.md`.
 
 ## Output
 

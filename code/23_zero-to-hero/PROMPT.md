@@ -20,12 +20,37 @@ Each lecture has a folder `code/23_zero-to-hero/NN_<name>/` with a unit note, a 
    ```
    Work the notebook top to bottom. Say your prediction out loud before every grader run. Stuck on an idea for 20 min → ask the coach for a hint (one tier per ask). Stuck on syntax → ask.
 6. **Output.** Fill the notebook's last section (the from-memory build) and write a "what surprised me" paragraph in the unit note's Notes. The coach has been keeping a *Coaching log* there too: one bullet per idea you said back correctly, with the wrong model and the correction.
-7. **Close the unit.** Ask the coach to fill in the three review dates in `quiz_NN_<name>.md` and rewrite its questions from the Coaching log gaps. Tick the lecture in the sprint PMOC and update the status column in the course README.
-8. **Review.** Do the quiz at +1 day, +4 days, +2 weeks, from memory, then check the Coaching log. Score 0/1/2; anything weak twice gets a +1 month fourth review.
+7. **Close the unit.** Ask the coach to fill in the three review dates in `quiz_NN_<name>.md` and rewrite its questions from the Coaching log gaps. Tick the lecture in [[PMOC - Foundations of AI Sprint]] and update the status column in the course README.
+8. **When a unit closes.** The coach writes `quiz_NN_<name>.md` with the standard header (three review dates from the close date, the 0/1/2 grid, the +1 month rule), then appends three rows to [[Quiz Schedule - Foundations]]: unit, quiz file path, review 1/2/3, due at +1d, +4d, +14d from the close date. That note is what the daily board reads. After each review, tick its row and record the score; if any item scored 0 or 1 on two consecutive reviews, append a fourth row at +1 month.
+9. **Review.** When the board says a review is due: open Claude Code in `~/repos/deep-learning`, paste Prompt B below with the review number and quiz path filled in. It asks one question at a time, you answer from memory, it scores 0/1/2 against the Coaching log, fills the grid, and ticks the row in [[Quiz Schedule - Foundations]]. Say `skip` to drop a question that isn't worth answering: it scores `–`, stays dropped, and is out of the two-in-a-row rule.
 
 Stopping mid-unit: the coach appends `**Paused <date>.** Next: …` to Notes. Next session starts by reading the Coaching log and that line.
 
 Unit 8 (State of GPT) is a talk: cold attempt, watch, redraw the pipeline, no notebook.
+
+## Prompt B — run a review
+
+Paste into Claude Code in `~/repos/deep-learning` when a review is due. Fill the two brackets.
+
+```text
+Run review [N] of code/23_zero-to-hero/[NN_<name>]/quiz_[NN_<name>].md.
+
+Ask me the questions one at a time, in order. I answer from memory. Do not
+show me the answer, the Coaching log, or any hint until I have answered or
+said "skip". "skip" means the question is dropped: score it `–`, it stays
+dropped for the rest of the unit, and it is out of the two-in-a-row rule.
+
+After each answer, score it 0/1/2 against the Coaching log in the unit note,
+tell me the score and the correction in at most two lines, then move on.
+
+At the end: fill the R[N] column in the quiz's Scores table and tick the
+review row in its header. Then in the vault schedule note
+~/Documents/ZK Home/_private/3-MOCs and Projects/Quiz Schedule - Foundations.md
+tick this review's row and write the total, dropped items out of the
+denominator (e.g. 14/18). If any item scored 0 or 1 on this review and the
+one before it, add a fourth row there at +1 month and tell me which items.
+Then give me the two weakest ideas in one line each.
+```
 
 ## Prompt A — build a unit (only for a new course, or to rebuild one)
 
@@ -97,8 +122,11 @@ FOUR FILES:
    grid, the rule that anything weak twice gets a +1 month fourth review,
    and ~10 questions answerable from memory: concrete numeric cases ("given
    these values, what prints"), "write X from memory" code items, one-
-   sentence "why" questions, and the unit's core question last. Link it
-   from a "## Review" section in the unit note, before ## Output.
+   sentence "why" questions, and the unit's core question last, plus a `–`
+   score for dropping a question. Link it from a "## Review" section in the
+   unit note, before ## Output, and end the kickoff prompt with: when the unit
+   finishes, fill the three review dates and append the three rows to the
+   vault note Quiz Schedule - Foundations.
 
 No hints file. Hints live in the coaching chat: keep a private tiered
 ladder per milestone (tier 1 a question, last tier close to the answer) in

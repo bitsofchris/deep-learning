@@ -13,7 +13,8 @@ long you want to keep it; Rawson & Dunlosky 2011: three spaced relearnings is en
 | 3 | +2 weeks | 2026-09-24 | [ ] |
 
 Score each item 0 (blank), 1 (partial), 2 (clean). Anything scored 0 or 1 twice in a
-row gets a fourth review at +1 month.
+row gets a fourth review at +1 month. Score `–` to drop a question not worth answering; a
+dropped item stays `–` in later reviews and is out of the two-in-a-row rule.
 
 ## Questions
 
