@@ -8,7 +8,7 @@ long you want to keep it; Rawson & Dunlosky 2011: three spaced relearnings is en
 
 | Review | When | Date | Done |
 |--------|------|------|------|
-| 1 | +1 day, right before writing the training loop | 2026-09-11 | [ ] |
+| 1 | +1 day, right before writing the training loop | 2026-09-11 | [x] |
 | 2 | +4 days | 2026-09-14 | [ ] |
 | 3 | +2 weeks | 2026-09-24 | [ ] |
 
@@ -39,13 +39,13 @@ row gets a fourth review at +1 month.
 
 | Q | R1 | R2 | R3 |
 |---|----|----|----|
-| 1 |    |    |    |
-| 2 |    |    |    |
-| 3 |    |    |    |
-| 4 |    |    |    |
-| 5 |    |    |    |
-| 6 |    |    |    |
-| 7 |    |    |    |
-| 8 |    |    |    |
-| 9 |    |    |    |
-| 10 |   |    |    |
+| 1 | 1  |    |    |
+| 2 | 2  |    |    |
+| 3 | 0  |    |    |
+| 4 | 1  |    |    |
+| 5 | 2  |    |    |
+| 6 | 1  |    |    |
+| 7 | 0  |    |    |
+| 8 | 1  |    |    |
+| 9 | 1  |    |    |
+| 10 | 2 |    |    |

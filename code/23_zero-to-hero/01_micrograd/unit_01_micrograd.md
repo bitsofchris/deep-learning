@@ -93,6 +93,52 @@ Then switch to coaching mode for the notebook. Rules for that mode:
 
 ## Notes
 
+### Recap (TL;DR of the lecture, in my terms)
+
+We built two things. **micrograd** is a backprop engine: a `Value` class that wraps one
+number and remembers how it was made. Then we stacked `Value`s into an **MLP**, a basic
+neural network, and trained it. Nothing in the MLP knows calculus. Once `Value` works, a
+network is just arithmetic on top of it.
+
+**Backprop** is the algorithm that tells every weight which way to move.
+- The **loss** is one `Value` that measures how wrong all predictions are together.
+  Squared error summed over the examples. It is the root of the graph.
+- A **derivative** is the ratio: how much the output moves per tiny nudge of an input.
+  `dL/dw` is the number each weight needs.
+- You never differentiate the whole formula. Each op knows only its **local derivative**
+  (`*`: the other operand, `+`: 1, `tanh`: `1 - out²`, `x**n`: `n·x^(n-1)`), and the
+  chain rule multiplies local × incoming gradient, one hop at a time, from `L` back to
+  the leaves. That multiply is the whole content of every `_backward` closure.
+- Gradients **accumulate** (`+=`) because a node used in two places gets contributions
+  from both paths. In a real network every weight is used once per example.
+- **Order:** a node's `_backward` may run only after every node that consumes it has
+  run, so its incoming gradient is final. Reverse topological order is the name for that.
+
+**MLP** is layers of neurons.
+- A **neuron** is `tanh(w·x + b)`. `nin` weights plus a bias, all `Value`s, all trainable.
+  The raw sum is the pre-activation, the tanh of it is the activation.
+- A **layer** is `nout` neurons that all see the same input and hand back a list of
+  activations. That list is the next layer's input.
+- The `Value` class is what makes this trainable: every intermediate result tracks its
+  inputs (`_prev`) and how to push gradient into them (`_backward`), so `loss.backward()`
+  reaches every weight without the network doing anything special.
+
+**One training step:** forward → loss → zero grads → `loss.backward()` → nudge each
+parameter by `-lr * grad`. The last line is the only one that changes the network.
+Zeroing is not optional here because the closures use `+=`.
+
+**Unit question, answered:** the gradient at a weight is the direction that raises the
+loss. The weight moves a small step the other way. Every weight does this at once, from
+one backward pass.
+
+### What surprised me
+
+*(write this yourself — where your prediction differed from what the grader said)*
+Candidates from the session: `_backward` writes into the children, not into itself;
+`Value(activation)` silently cuts the graph; squaring the input instead of the output in
+tanh; `+` in the wrong place in the addition closure.
+
+
 
 ### Coaching log (things I worked out from my own questions)
 
@@ -108,3 +154,4 @@ Then switch to coaching mode for the notebook. Rules for that mode:
 - Neuron: `nin` weights plus a bias, all `Value`s, all in `parameters()` (bias gets nudged too). `__call__` is `tanh(sum(w*x) + b)` using Value ops. Wrapping the result in `Value(...)` creates a new leaf and cuts the graph, so backward never reaches the weights. Without the tanh a stack of neurons is still linear.
 - Layer: `nout` neurons each seeing the same `x`. Calling it returns their activations as a list, or the bare Value when there's one neuron. The `if` lives only in Layer, since Neuron always returns one Value and MLP just returns what its last layer returns.
 - MLP: `sizes = [nin] + nouts`, one `Layer(sizes[i], sizes[i+1])` per consecutive pair. Calling it is a loop that replaces `x` with `layer(x)`. `MLP(3,[4,4,1])` has 41 params. Milestone 7 passes.
+- Training loop: forward on each `x`, loss = `sum((pred - y)**2)`, zero param grads, `loss.backward()`, `p.data -= lr * p.grad`. lr 0.01 was too slow (4.4 → 3.0 in 20 steps); 0.05 is the lecture's. Predictions printed at the end are from before the final update.
