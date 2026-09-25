@@ -8,9 +8,9 @@ long you want to keep it; Rawson & Dunlosky 2011: three spaced relearnings is en
 
 | Review | When | Date | Done |
 |--------|------|------|------|
-| 1 | +1 day, right before writing the training loop | 2026-09-11 | [x] |
-| 2 | +4 days | 2026-09-14 | [ ] |
-| 3 | +2 weeks | 2026-09-24 | [ ] |
+| 1 | +1 day, right before writing the training loop | 2026-09-11  | 2  |
+| 2 | +4 days | 2026-09-14  | 2  |
+| 3 | +2 weeks | 2026-09-24  | –  |
 
 Score each item 0 (blank), 1 (partial), 2 (clean). Anything scored 0 or 1 twice in a
 row gets a fourth review at +1 month. Score `–` to drop a question not worth answering; a
@@ -40,13 +40,13 @@ dropped item stays `–` in later reviews and is out of the two-in-a-row rule.
 
 | Q | R1 | R2 | R3 |
 |---|----|----|----|
-| 1 | 1  |    |    |
-| 2 | 2  |    |    |
-| 3 | 0  |    |    |
-| 4 | 1  |    |    |
-| 5 | 2  |    |    |
-| 6 | 1  |    |    |
-| 7 | 0  |    |    |
-| 8 | 1  |    |    |
-| 9 | 1  |    |    |
-| 10 | 2 |    |    |
+| 1 | 1 | 2  | 2  |
+| 2 | 2 | 2  | 2  |
+| 3 | 0 | –  | –  |
+| 4 | 1 | 2  | 2  |
+| 5 | 2 | 2  | 2  |
+| 6 | 1 | 1  | 1  |
+| 7 | 0 | 0  | –  |
+| 8 | 1 | 1  | 1  |
+| 9 | 1 | 2  | 1  |
+| 10 | 2 | 2  | 2  |

@@ -124,6 +124,56 @@ Then append three rows to the OpenAugi quiz schedule, the vault note
 board fires each review.
 ```
 
+
+### My Cold Attempt (2026-09-22, after watching once)
+
+1. Rows and columns are each a letter plus the special token. Row = first letter, column = the letter that comes after it. Cell = the count of that pair.
+2. "Use some function" to turn a row into a distribution you can sample from. `keepdim` matters "because otherwise it would be collapsing certain dimensions."
+3. It's the loss, the negative log likelihood. If we predict the correct next letter the loss is small. Don't know why log. Negative "because we want the number to go down." Not sure why average.
+4. One-hot: a vector where each position is a class. Multiplying by W gives "a vector of weights or probabilities for that category, if there's one layer."
+5. Softmax: exponent, then a normalization step. Didn't follow "what do the outputs of the first one resemble."
+6. Zero grads (easy to forget; otherwise gradients accumulate across steps), backward, then step against the gradient scaled by the learning rate on each parameter. Named three lines, not four.
+
+### Corrections / Gaps
+
+- **Q1 is right.** Rows are the *previous* char, columns the *next* char, plus `.` for start/end. Hold onto "row = previous"; the notebook will ask which axis is which.
+- **Q2, two gaps.** (a) "Some function" is just *divide the row by its sum*; there is no library call. (b) `keepdim` is not about collapsing in general. `N.sum(1)` has shape `(27,)`; `N.sum(1, keepdim=True)` has shape `(27, 1)`. Broadcasting aligns trailing dims, so `N / N.sum(1)` divides *columns* by row sums (each column j divided by the sum of row j), which is silently wrong and still runs. With `(27, 1)` each row is divided by its own sum. Be able to say which wrong thing gets computed, not just that it "collapses."
+- **Q3 is the unit question and was the weakest.** You had "loss = NLL" as a name but not the reason for any of its three pieces:
+  - *Why log:* the likelihood of the whole dataset is a *product* of per-character probabilities, which underflows to 0 for thousands of names. Log turns the product into a sum.
+  - *Why negative:* log of a probability is between −∞ and 0, so higher likelihood means log closer to 0. Negating makes "good" small and gives a quantity to *minimize*. "Because we want it to go down" is the effect, not the reason.
+  - *Why average:* the sum grows with dataset size, so it can't be compared across datasets or batches. The mean is per-character, and the uniform model's mean is exactly `log(27)`.
+- **Q4 half right.** The one-hot part is fine. But `one_hot @ W` is not "a vector of probabilities." It is *row 5 of W* selected out, unchanged. The matmul is an indexing operation. The row is logits, not probabilities, until Q5's two steps happen.
+- **Q5 partial.** The two operations are `exp` then divide by the row sum. What `exp(logits)` resembles is the *count table* from milestone 1: positive numbers that get normalized the same way. That is the link between the counting model and the net, and it is the whole point of milestones 4 and 6.
+- **Q6 mostly right, one line missing.** Four lines: forward (compute loss), `W.grad = None`, `loss.backward()`, `W.data += -lr * W.grad`. You had the zero-grad consequence right. Forgotten-line effect at `lr=50`: the accumulated gradient makes the update grow every step, so the loss wobbles or blows up.
+
+### What to look for while watching
+
+You've watched once. On the rewatch or skim of these timestamps, check specifically:
+
+- ~40:00 the `keepdim` broadcasting bug. Karpathy shows the wrong version. Say out loud what the wrong version divides by.
+- ~50:00 the likelihood section. Watch the product of probabilities collapse, then the log, then the negation, then the mean. Each step should answer one of the three "why"s.
+- ~1:05:00 one-hot times W. Watch him point at the one row of W that comes out.
+- ~1:15:00 "we interpret the logits as log-counts." Then `exp` gives counts and the divide gives probs. This is Q5's "resemble."
+- ~1:30:00 the training loop. Count the lines. Notice `W.grad = None` before `backward`.
+- ~1:50:00 smoothing versus the `W**2` regularization term. Only for milestone 7.
+
 ## Notes
 
 ### Coaching log (things I worked out from my own questions)
+
+- **M2, the denominator.** Wrong model: divide every count by the grand total of N ("the full corpus"). Correction, in my words: given letter i, I'm predicting j, so each row has to sum to 1 on its own; sum the counts row-wise and divide each count in a row by that row's sum. The sampling loop draws from one row alone, which is why the whole-table total is wrong.
+- **M2, keepdim.** Wrong model: `keepdim` "stops it collapsing dimensions"; and "nothing fails without it so it doesn't matter." Correction: `N.sum(1)` without keepdim is a `(27,)` vector, which broadcasts as a *row* `(1, 27)` and divides column j by row j's sum, silently wrong. `keepdim=True` gives `(27, 1)`, which broadcasts as a column so row i is divided by its own sum. Verified by `(N / N.sum(1)).sum(1)` not being ones. (Note: I still need to be able to say this back without prompting; the grader prediction was skipped on M1 and M2.)
+- **M2, side observation.** Row sums equal column sums for every character on this dataset. Not because the table is square; because every character occurrence inside `.word.` is a *previous* exactly once and a *next* exactly once. Said I got it; not said back in full.
+- **M3, likelihood.** Wrong model: "NLL has something to do with the probability we already have"; no idea what likelihood meant. Correction, in my words: how likely the model found everything that actually happened, i.e. take the model's probability for each true next character and multiply them together. (Log, negative, and average still open.)
+- **M3, why not the raw product.** Said back after running it: multiplying hundreds of thousands of probabilities below 1 keeps shrinking and underflows to exactly 0, so the raw likelihood is useless as a training number. (Still vague on *how* log fixes it: said "log makes it a number that gets bigger," missing that log turns the product into a sum.)
+- **M3, what gets scored.** Wrong model: `nll` needs `xs` too, and "somehow compare the probability to the fact we saw it." Correction, in my words: `probs` already has one row per example (the caller did `P[xs]`); for each row k I look up column `ys[k]`, the probability the model gave to what actually came next, and that picked number *is* the score; there is nothing to compare it to. Then log each, add them, negate. (Average still open. `ys` is already indices, not strings.)
+- **M3, average.** Found by the grader (off by a factor of n), fixed with `.mean()` (sum / len(ys) is identical). Not yet said back *why* the average: owed one sentence using the uniform model = log(27).
+- **M4, one-hot @ W.** Wrong model (cold attempt Q4): `one_hot @ W` gives "a vector of probabilities for that category." Correction, in my words: a one-hot with a 1 at position 5 times W takes all 27 values at row 5 of W. (Not yet said: why the other rows vanish, and that this makes the matmul equal to `W[xs]`.)
+- **M7, the W**2 penalty.** Wrong model: copied `alpha * mean(W**2)` without an intuition. Correction, in my words: mean(W**2) is 0 only when every weight is 0 and grows as weights move away from 0; adding alpha times it to the loss makes non-zero weights cost loss, so gradient descent pushes the weights toward 0. Also: a W row with all-equal values gives a uniform output row. (Still mixing up weights vs table: weights go to 0, the table goes to 1/27. And said "exp(0)=1, divide by 1" instead of divide by the row sum of 27.)
+- **M7, smoothing placement.** Wrong model: add k to the row sum. Correction (grader: "still contains zeros"): k goes into every cell of N before normalizing; adding it only to the denominator leaves zero counts at zero. (Pending: say back why.)
+
+### What surprised me / not clear (closed 2026-09-24)
+
+A single layer of weights can be the same thing as a probability lookup table. Softmax, and the relationship between e and the logarithm, took real work to understand. It was a good reminder that backprop starts at the loss.
+
+Closed after milestone 7, with all seven milestones passing. The from-memory train-and-sample cell was skipped by choice; the quiz covers that loop instead. Never said back in full: why the loss is averaged, what `neural_probs(log(P))` returns and why, and the "smoothing == regularization" sentence. I never predicted a grader result before running it.

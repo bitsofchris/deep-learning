@@ -23,7 +23,7 @@ cell per milestone, and the grader module.
 | # | Video | Folder | Status |
 |---|-------|--------|--------|
 | 1 | The spelled-out intro to neural networks and backpropagation: building micrograd | `01_micrograd/` | done, in review |
-| 2 | The spelled-out intro to language modeling: building makemore | `02_makemore_bigram/` | scaffolded |
+| 2 | The spelled-out intro to language modeling: building makemore | `02_makemore_bigram/` | done, in review |
 | 3 | Building makemore Part 2: MLP | `03_makemore_mlp/` | scaffolded |
 | 4 | Building makemore Part 3: Activations & Gradients, BatchNorm | `04_makemore_batchnorm/` | scaffolded |
 | 5 | Building makemore Part 4: Becoming a Backprop Ninja | `05_makemore_backprop_ninja/` | scaffolded |
